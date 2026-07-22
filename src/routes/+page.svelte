@@ -264,7 +264,12 @@
 							
 							<div class={`grid grid-cols-1 lg:grid-cols-2 gap-4 ${isReorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`} use:sortableGroup={group.categoryId}>
 								{#each group.snippets as snippet (snippet.id)}
-									<SnippetCard {snippet} startInEditMode={snippet.id === newlyCreatedSnippetId} {isReorderMode} />
+									<SnippetCard 
+										{snippet} 
+										startInEditMode={snippet.id === newlyCreatedSnippetId} 
+										{isReorderMode} 
+										onEditComplete={() => { if (snippet.id === newlyCreatedSnippetId) newlyCreatedSnippetId = null; }}
+									/>
 								{/each}
 							</div>
 						</div>

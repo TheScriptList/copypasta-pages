@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { dbStore, type Snippet } from '$lib/stores/db.svelte';
 	import { Check, Edit2, Save, X, Clock, Trash2 } from 'lucide-svelte';
+	import { fade, scale, slide } from 'svelte/transition';
+	import { backOut } from 'svelte/easing';
 
-	let { snippet, startInEditMode = false, isReorderMode = false }: { snippet: Snippet; startInEditMode?: boolean; isReorderMode?: boolean } = $props();
+	let { snippet, startInEditMode = false, isReorderMode = false, onEditComplete }: { snippet: Snippet; startInEditMode?: boolean; isReorderMode?: boolean; onEditComplete?: () => void } = $props();
 	
 	let copied = $state(false);
 	
@@ -56,6 +58,7 @@
 
 	function cancelEdit() {
 		isEditing = false;
+		if (onEditComplete) onEditComplete();
 	}
 
 	function saveEdit() {
@@ -66,6 +69,7 @@
 			dbStore.save();
 		}
 		isEditing = false;
+		if (onEditComplete) onEditComplete();
 	}
 
 	function openDeleteModal() {
@@ -122,7 +126,7 @@
 
 		<div class={isReorderMode ? 'pointer-events-none' : 'pointer-events-auto'}>
 			{#if isEditing}
-				<div class="flex flex-col gap-4">
+				<div class="flex flex-col gap-4" in:slide={{duration: 250, delay: 250}} out:slide={{duration: 250}}>
 					{#each dbStore.data.settings.languages as lang}
 						<div>
 							<label class="label pt-0 pb-1"><span class="label-text text-xs font-bold">{lang.name} Content</span></label>
@@ -136,21 +140,29 @@
 					{/each}
 				</div>
 			{:else}
-				<button 
-					class="bg-base-200 hover:bg-base-300 rounded-lg p-3 font-mono text-sm whitespace-pre-wrap break-words min-h-[4rem] text-left transition-colors relative group w-full"
-					onclick={handleCopy}
-					aria-label="Copy snippet"
-					disabled={isReorderMode}
-				>
-					{activeContent || 'Empty snippet'}
-					{#if copied}
-						<div class="absolute inset-0 bg-success/20 flex items-center justify-center rounded-lg backdrop-blur-[1px]">
-							<div class="bg-success text-success-content px-3 py-1 rounded-full flex items-center gap-2 shadow-sm font-sans font-bold">
-								<Check class="w-4 h-4" /> Copied!
+				<div in:slide={{duration: 250, delay: 250}} out:slide={{duration: 250}}>
+					<button 
+						class="bg-base-200 hover:bg-base-300 rounded-lg p-3 font-mono text-sm whitespace-pre-wrap break-words min-h-[4rem] text-left transition-colors relative group w-full block"
+						onclick={handleCopy}
+						aria-label="Copy snippet"
+						disabled={isReorderMode}
+					>
+						{activeContent || 'Empty snippet'}
+						{#if copied}
+							<div 
+								class="absolute inset-0 bg-success/20 flex items-center justify-center rounded-lg backdrop-blur-sm"
+								transition:fade={{duration: 150}}
+							>
+								<div 
+									class="bg-success text-success-content px-3 py-1 rounded-full flex items-center gap-2 shadow-sm font-sans font-bold"
+									transition:scale={{duration: 300, start: 0.8, opacity: 0, easing: backOut}}
+								>
+									<Check class="w-4 h-4" /> Copied!
+								</div>
 							</div>
-						</div>
-					{/if}
-				</button>
+						{/if}
+					</button>
+				</div>
 			{/if}
 		</div>
 	</div>
