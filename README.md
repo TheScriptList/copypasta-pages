@@ -1,42 +1,33 @@
-# sv
+# Copypasta Pages
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+A static SvelteKit web application for managing and syncing your "copypastas" (snippets, text templates, or code blocks). Your data is securely stored in a GitHub Gist and synced across devices using a Personal Access Token (PAT).
 
-## Creating a project
+## Features
 
-If you're seeing this, you've probably already done this step. Congrats!
+- **GitHub Gist Sync**: Securely store and sync your copypastas across devices.
+- **Dual/Multi-Language Support**: Configure custom languages for side-by-side or multi-mode snippet views.
+- **Static & Fast**: Built with SvelteKit and DaisyUI, running entirely in the browser.
+- **PWA Ready**: Works offline after the first load.
 
-```sh
-# create a new project
-npx sv create my-app
-```
+## Developer Setup
 
-To recreate this project with the same configuration:
+1. **Clone the repository:**
+   ```bash
+   git clone <repo-url>
+   cd copypasta-pages
+   ```
 
-```sh
-# recreate this project
-npx sv@0.16.5 create --template minimal --types ts --add prettier eslint tailwindcss="plugins:none" --install npm .
-```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-## Developing
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```sh
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+4. **Build for production:**
+   ```bash
+   npm run build
+   ```

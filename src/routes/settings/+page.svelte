@@ -1,4 +1,5 @@
 <script lang="ts">
+	import pkg from '../../../package.json';
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { dbStore, DEFAULT_DB } from '$lib/stores/db.svelte';
 	import { Save, Trash2, Plus, Cloud, Loader2, ExternalLink, AlertTriangle } from 'lucide-svelte';
@@ -263,4 +264,8 @@
 			</div>
 		</div>
 	</section>
+
+	<div class="text-center text-sm text-base-content/50 mt-4 pb-4 font-mono">
+		v{pkg.version}
+	</div>
 </div>
