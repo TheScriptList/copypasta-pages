@@ -8,7 +8,9 @@
 	
 	let copied = $state(false);
 	
+	// svelte-ignore state_referenced_locally
 	let isEditing = $state(startInEditMode);
+	// svelte-ignore state_referenced_locally
 	let editContents = $state<Record<string, string>>(startInEditMode ? { ...snippet.content } : {});
 	let deleteModal: HTMLDialogElement;
 
@@ -129,8 +131,9 @@
 				<div class="flex flex-col gap-4" in:slide={{duration: 250, delay: 250}} out:slide={{duration: 250}}>
 					{#each dbStore.data.settings.languages as lang}
 						<div>
-							<label class="label pt-0 pb-1"><span class="label-text text-xs font-bold">{lang.name} Content</span></label>
+							<label class="label pt-0 pb-1" for="content-{snippet.id}-{lang.id}"><span class="label-text text-xs font-bold">{lang.name} Content</span></label>
 							<textarea 
+								id="content-{snippet.id}-{lang.id}"
 								class="textarea textarea-bordered font-mono text-sm w-full leading-relaxed" 
 								rows="3" 
 								bind:value={editContents[lang.id]}

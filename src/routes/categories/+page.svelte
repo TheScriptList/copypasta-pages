@@ -100,7 +100,7 @@
 				<div tabindex="0" role="button" class="btn btn-outline w-16 text-xl">
 					{newCategoryEmoji || '😀'}
 				</div>
-				<div tabindex="0" class="dropdown-content z-[1] p-2 shadow bg-base-100 rounded-box w-[350px]">
+				<div tabindex="-1" class="dropdown-content z-[1] p-2 shadow bg-base-100 rounded-box w-[350px]">
 					<emoji-picker class="w-full" use:emojiPicker={(emoji) => { 
 						newCategoryEmoji = emoji; 
 						if (document.activeElement instanceof HTMLElement) {
@@ -152,7 +152,7 @@
 									<div tabindex="0" role="button" class="btn btn-sm btn-outline w-12 text-lg">
 										{category.icon || '😀'}
 									</div>
-									<div tabindex="0" class="dropdown-content z-[1] p-2 shadow bg-base-100 rounded-box w-[350px]">
+									<div tabindex="-1" class="dropdown-content z-[1] p-2 shadow bg-base-100 rounded-box w-[350px]">
 										<emoji-picker class="w-full" use:emojiPicker={(emoji) => { 
 											category.icon = emoji; 
 											dbStore.save();

@@ -124,10 +124,11 @@
 			</p>
 			
 			<div class="form-control w-full">
-				<label class="label">
+				<label class="label" for="pat">
 					<span class="label-text font-medium">Personal Access Token (PAT)</span>
 				</label>
 				<input 
+					id="pat"
 					type="password" 
 					placeholder="ghp_..." 
 					class="input input-bordered w-full" 
@@ -135,16 +136,17 @@
 					oninput={() => { patError = false; errorMessage = null; }}
 					bind:value={pat}
 				/>
-				<label class="label">
+				<div class="label">
 					<span class="label-text-alt text-base-content/60">Needs the "gist" scope.</span>
-				</label>
+				</div>
 			</div>
 
 			<div class="form-control w-full">
-				<label class="label">
+				<label class="label" for="gist">
 					<span class="label-text font-medium">Gist ID</span>
 				</label>
 				<input 
+					id="gist"
 					type="text" 
 					placeholder="e.g. 1a2b3c4d5e6f7g8h9i0j" 
 					class="input input-bordered w-full" 

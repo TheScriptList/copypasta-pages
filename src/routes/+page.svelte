@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { dbStore } from '$lib/stores/db.svelte';
 	import { authStore } from '$lib/stores/auth.svelte';
+	import { base } from '$app/paths';
 	import SnippetCard from '$lib/components/SnippetCard.svelte';
 	import { Loader2, Plus, ArrowRight, AlertTriangle, ArrowUpDown } from 'lucide-svelte';
 	import Sortable from 'sortablejs';
@@ -171,7 +172,7 @@
 			<h3 class="font-bold">Sync Not Configured</h3>
 			<div class="text-xs">Your snippets are only saved locally. To sync across devices, please configure GitHub Gist settings.</div>
 		</div>
-		<a href="/settings" class="btn btn-sm">Configure Sync</a>
+		<a href="{base}/settings" class="btn btn-sm">Configure Sync</a>
 	</div>
 {/if}
 
