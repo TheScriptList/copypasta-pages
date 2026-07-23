@@ -1,4 +1,4 @@
-# Copypasta Pages
+# Copypasta (GitHub Pages)
 
 A static SvelteKit web application for managing and syncing your "copypastas" (snippets, text templates, or code blocks). Your data is securely stored in a GitHub Gist and synced across devices using a Personal Access Token (PAT).
 
