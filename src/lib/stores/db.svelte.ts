@@ -114,13 +114,13 @@ class DbStore {
 				const localDate = new Date(this.data.updatedAt || 0).getTime();
 				const remoteDate = new Date(remoteData.updatedAt || 0).getTime();
 				const lastSynced = this.getLastSyncedAt();
-				
+
 				if (!remoteData.updatedAt) {
 					await this._pushToGist();
 				} else {
 					const isRemoteNewer = remoteDate > lastSynced;
 					const isLocalNewer = localDate > lastSynced;
-					
+
 					if (isRemoteNewer && isLocalNewer && localDate !== remoteDate) {
 						this.conflictData = remoteData;
 						this.syncStatus = 'Error';
@@ -138,7 +138,8 @@ class DbStore {
 				// Initialize gist if empty
 				await this._pushToGist();
 			}
-		} catch (e: any) {
+		} catch (err) {
+			const e = err as Error;
 			this.error = e.message;
 			this.syncStatus = 'Error';
 		} finally {
@@ -157,11 +158,11 @@ class DbStore {
 	async save() {
 		this.data.updatedAt = new Date().toISOString();
 		this._saveLocal();
-		
+
 		if (this._saveTimeout) {
 			clearTimeout(this._saveTimeout);
 		}
-		
+
 		this._saveTimeout = setTimeout(() => {
 			this._saveTimeout = null;
 			this._pushToGist();
@@ -213,7 +214,8 @@ class DbStore {
 			if (!res.ok) throw new Error('Failed to update gist');
 			this.setLastSyncedAt(new Date(this.data.updatedAt).getTime());
 			this.syncStatus = 'Synced';
-		} catch (e: any) {
+		} catch (err) {
+			const e = err as Error;
 			this.error = e.message;
 			this.syncStatus = 'Error';
 		} finally {

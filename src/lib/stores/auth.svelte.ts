@@ -12,7 +12,7 @@ class AuthStore {
 			localStorage.setItem('gh_gist_id', gistId);
 		}
 	}
-    
+
 	clear() {
 		this.token = '';
 		this.gistId = '';

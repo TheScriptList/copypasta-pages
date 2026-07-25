@@ -13,17 +13,20 @@ A static SvelteKit web application for managing and syncing your "copypastas" (s
 ## Developer Setup
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/TheScriptList/copypasta-pages.git
    cd copypasta-pages
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Start the development server:**
+
    ```bash
    npm run dev
    ```

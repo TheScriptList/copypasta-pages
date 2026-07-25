@@ -17,7 +17,7 @@ const CACHE = `cache-${version}`;
 
 const ASSETS = [
 	...build, // the app itself
-	...files  // everything in `static`
+	...files // everything in `static`
 ];
 
 self.addEventListener('install', (event) => {
@@ -44,7 +44,7 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
 	// ignore POST requests etc
 	if (event.request.method !== 'GET') return;
-	
+
 	// Ignore requests that aren't HTTP/HTTPS (like chrome-extension://)
 	if (!event.request.url.startsWith('http')) return;
 

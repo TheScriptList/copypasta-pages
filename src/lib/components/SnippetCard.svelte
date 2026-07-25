@@ -1,13 +1,23 @@
 <script lang="ts">
 	import { dbStore, type Snippet } from '$lib/stores/db.svelte';
-	import { Check, Edit2, Save, X, Clock, Trash2 } from 'lucide-svelte';
+	import { Check, Edit2, Save, X, Clock, Trash2 } from '@lucide/svelte';
 	import { fade, scale, slide } from 'svelte/transition';
 	import { backOut } from 'svelte/easing';
 
-	let { snippet, startInEditMode = false, isReorderMode = false, onEditComplete }: { snippet: Snippet; startInEditMode?: boolean; isReorderMode?: boolean; onEditComplete?: () => void } = $props();
-	
+	let {
+		snippet,
+		startInEditMode = false,
+		isReorderMode = false,
+		onEditComplete
+	}: {
+		snippet: Snippet;
+		startInEditMode?: boolean;
+		isReorderMode?: boolean;
+		onEditComplete?: () => void;
+	} = $props();
+
 	let copied = $state(false);
-	
+
 	// svelte-ignore state_referenced_locally
 	let isEditing = $state(startInEditMode);
 	// svelte-ignore state_referenced_locally
@@ -27,7 +37,9 @@
 					dbStore.editingSnippetIds.push(id);
 				}
 			} else {
-				dbStore.editingSnippetIds = dbStore.editingSnippetIds.filter(existingId => existingId !== id);
+				dbStore.editingSnippetIds = dbStore.editingSnippetIds.filter(
+					(existingId) => existingId !== id
+				);
 			}
 		});
 	});
@@ -41,7 +53,7 @@
 	function handleGlobalSave() {
 		if (isEditing) saveEdit();
 	}
-	
+
 	function handleGlobalCancel() {
 		if (isEditing) cancelEdit();
 	}
@@ -52,7 +64,7 @@
 	});
 
 	onDestroy(() => {
-		dbStore.editingSnippetIds = dbStore.editingSnippetIds.filter(id => id !== snippet.id);
+		dbStore.editingSnippetIds = dbStore.editingSnippetIds.filter((id) => id !== snippet.id);
 		if (typeof window !== 'undefined') {
 			window.removeEventListener('save-all', handleGlobalSave);
 			window.removeEventListener('cancel-all', handleGlobalCancel);
@@ -65,7 +77,7 @@
 		const date = new Date(dateString);
 		const diffInMs = date.getTime() - Date.now();
 		const diffInSeconds = Math.round(diffInMs / 1000);
-		
+
 		if (Math.abs(diffInSeconds) < 60) return rtf.format(diffInSeconds, 'second');
 		const diffInMinutes = Math.round(diffInSeconds / 60);
 		if (Math.abs(diffInMinutes) < 60) return rtf.format(diffInMinutes, 'minute');
@@ -101,7 +113,7 @@
 	}
 
 	function saveEdit() {
-		const dbSnippet = dbStore.data.snippets.find(s => s.id === snippet.id);
+		const dbSnippet = dbStore.data.snippets.find((s) => s.id === snippet.id);
 		if (dbSnippet) {
 			dbSnippet.content = { ...editContents };
 			dbSnippet.updatedAt = new Date().toISOString();
@@ -116,7 +128,7 @@
 	}
 
 	function confirmDelete() {
-		dbStore.data.snippets = dbStore.data.snippets.filter(s => s.id !== snippet.id);
+		dbStore.data.snippets = dbStore.data.snippets.filter((s) => s.id !== snippet.id);
 		dbStore.save();
 	}
 
@@ -135,87 +147,103 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<style>
-	@keyframes shake {
-		0%, 100% { rotate: 0deg; }
-		25% { rotate: -0.5deg; }
-		75% { rotate: 0.5deg; }
-	}
-	.shake-animation {
-		animation: shake 0.3s ease-in-out infinite;
-	}
-</style>
-
-<div 
-	class={`card bg-base-100 shadow-xl border border-base-200 snippet-card ${isReorderMode ? 'shake-animation cursor-grab active:cursor-grabbing' : ''}`} 
+<div
+	class={`snippet-card card border border-base-200 bg-base-100 shadow-xl ${isReorderMode ? 'shake-animation cursor-grab active:cursor-grabbing' : ''}`}
 	data-id={snippet.id}
 	transition:scale={{ duration: 300, start: 0.9, opacity: 0, easing: backOut }}
 >
-	<div class="card-body p-4 pointer-events-none">
-		<div class={`flex justify-between items-start ${isReorderMode ? 'opacity-50' : 'pointer-events-auto'}`}>
+	<div class="pointer-events-none card-body p-4">
+		<div
+			class={`flex items-start justify-between ${isReorderMode ? 'opacity-50' : 'pointer-events-auto'}`}
+		>
 			<div class="flex flex-col gap-1">
-				<div class="tooltip tooltip-bottom tooltip-right" data-tip={new Date(snippet.updatedAt).toLocaleString()}>
-					<div class="text-xs text-base-content/50 flex items-center gap-1 cursor-help w-max mt-1">
-						<Clock class="w-3 h-3" />
+				<div
+					class="tooltip tooltip-bottom tooltip-right"
+					data-tip={new Date(snippet.updatedAt).toLocaleString()}
+				>
+					<div class="mt-1 flex w-max cursor-help items-center gap-1 text-xs text-base-content/50">
+						<Clock class="h-3 w-3" />
 						Updated {getRelativeTime(snippet.updatedAt)}
 					</div>
 				</div>
 			</div>
-			
+
 			{#if isEditing}
 				<div class="flex gap-1">
-					<button class="btn btn-sm btn-ghost btn-circle text-error" onclick={openDeleteModal} title="Delete">
-						<Trash2 class="w-4 h-4" />
+					<button
+						class="btn btn-circle btn-ghost text-error btn-sm"
+						onclick={openDeleteModal}
+						title="Delete"
+					>
+						<Trash2 class="h-4 w-4" />
 					</button>
-					<button class="btn btn-sm btn-ghost btn-circle text-base-content/50" onclick={cancelEdit} title="Cancel">
-						<X class="w-4 h-4" />
+					<button
+						class="btn btn-circle btn-ghost text-base-content/50 btn-sm"
+						onclick={cancelEdit}
+						title="Cancel"
+					>
+						<X class="h-4 w-4" />
 					</button>
-					<button class="btn btn-sm btn-ghost btn-circle text-success" onclick={saveEdit} title="Save">
-						<Save class="w-4 h-4" />
+					<button
+						class="btn btn-circle btn-ghost text-success btn-sm"
+						onclick={saveEdit}
+						title="Save"
+					>
+						<Save class="h-4 w-4" />
 					</button>
 				</div>
 			{:else}
-				<button class="btn btn-sm btn-circle btn-ghost" onclick={startEdit} title="Edit snippet" disabled={isReorderMode}>
-					<Edit2 class="w-4 h-4" />
+				<button
+					class="btn btn-circle btn-ghost btn-sm"
+					onclick={startEdit}
+					title="Edit snippet"
+					disabled={isReorderMode}
+				>
+					<Edit2 class="h-4 w-4" />
 				</button>
 			{/if}
 		</div>
 
 		<div class={isReorderMode ? 'pointer-events-none' : 'pointer-events-auto'}>
 			{#if isEditing}
-				<div class="flex flex-col gap-4" in:slide={{duration: 250, delay: 250}} out:slide={{duration: 250}}>
-					{#each dbStore.data.settings.languages as lang}
+				<div
+					class="flex flex-col gap-4"
+					in:slide={{ duration: 250, delay: 250 }}
+					out:slide={{ duration: 250 }}
+				>
+					{#each dbStore.data.settings.languages as lang (lang.id)}
 						<div>
-							<label class="label pt-0 pb-1" for="content-{snippet.id}-{lang.id}"><span class="label-text text-xs font-bold">{lang.name} Content</span></label>
-							<textarea 
+							<label class="label pt-0 pb-1" for="content-{snippet.id}-{lang.id}"
+								><span class="label-text text-xs font-bold">{lang.name} Content</span></label
+							>
+							<textarea
 								id="content-{snippet.id}-{lang.id}"
-								class="textarea textarea-bordered font-mono text-sm w-full leading-relaxed" 
-								rows="3" 
+								class="textarea-bordered textarea w-full font-mono text-sm leading-relaxed"
+								rows="3"
 								bind:value={editContents[lang.id]}
-								placeholder="Enter {lang.name} snippet..."
-							></textarea>
+								placeholder="Enter {lang.name} snippet..."></textarea>
 						</div>
 					{/each}
 				</div>
 			{:else}
-				<div in:slide={{duration: 250, delay: 250}} out:slide={{duration: 250}}>
-					<button 
-						class="bg-base-200 hover:bg-base-300 rounded-lg p-3 font-mono text-sm whitespace-pre-wrap break-words min-h-[4rem] text-left transition-colors relative group w-full block"
+				<div in:slide={{ duration: 250, delay: 250 }} out:slide={{ duration: 250 }}>
+					<button
+						class="group relative block min-h-[4rem] w-full rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
 						onclick={handleCopy}
 						aria-label="Copy snippet"
 						disabled={isReorderMode}
 					>
 						{activeContent || 'Empty snippet'}
 						{#if copied}
-							<div 
-								class="absolute inset-0 bg-success/20 flex items-center justify-center rounded-lg backdrop-blur-sm"
-								transition:fade={{duration: 150}}
+							<div
+								class="absolute inset-0 flex items-center justify-center rounded-lg bg-success/20 backdrop-blur-sm"
+								transition:fade={{ duration: 150 }}
 							>
-								<div 
-									class="bg-success text-success-content px-3 py-1 rounded-full flex items-center gap-2 shadow-sm font-sans font-bold"
-									transition:scale={{duration: 300, start: 0.8, opacity: 0, easing: backOut}}
+								<div
+									class="flex items-center gap-2 rounded-full bg-success px-3 py-1 font-sans font-bold text-success-content shadow-sm"
+									transition:scale={{ duration: 300, start: 0.8, opacity: 0, easing: backOut }}
 								>
-									<Check class="w-4 h-4" /> Copied!
+									<Check class="h-4 w-4" /> Copied!
 								</div>
 							</div>
 						{/if}
@@ -228,8 +256,8 @@
 
 <dialog bind:this={deleteModal} class="modal">
 	<div class="modal-box">
-		<h3 class="font-bold text-lg text-error flex items-center gap-2">
-			<Trash2 class="w-5 h-5" /> Delete Snippet?
+		<h3 class="flex items-center gap-2 text-lg font-bold text-error">
+			<Trash2 class="h-5 w-5" /> Delete Snippet?
 		</h3>
 		<p class="py-4">Are you sure you want to delete this snippet? This action cannot be undone.</p>
 		<div class="modal-action">
@@ -240,3 +268,21 @@
 		</div>
 	</div>
 </dialog>
+
+<style>
+	@keyframes shake {
+		0%,
+		100% {
+			rotate: 0deg;
+		}
+		25% {
+			rotate: -0.5deg;
+		}
+		75% {
+			rotate: 0.5deg;
+		}
+	}
+	.shake-animation {
+		animation: shake 0.3s ease-in-out infinite;
+	}
+</style>
