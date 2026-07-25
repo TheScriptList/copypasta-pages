@@ -4,6 +4,7 @@ import { authStore } from './auth.svelte';
 export interface Language {
 	id: string;
 	name: string;
+	showInMultiple?: boolean;
 }
 
 export interface Category {
@@ -24,6 +25,7 @@ export interface Database {
 	settings: {
 		languages: Language[];
 		dismissedSyncWarning?: boolean;
+		hideLanguageTitles?: boolean;
 	};
 	categories: Category[];
 	snippets: Snippet[];
@@ -33,9 +35,10 @@ export interface Database {
 export const DEFAULT_DB: Database = {
 	settings: {
 		languages: [
-			{ id: 'en', name: 'English' },
-			{ id: 'de', name: 'German' }
-		]
+			{ id: 'en', name: 'English', showInMultiple: true },
+			{ id: 'de', name: 'German', showInMultiple: true }
+		],
+		hideLanguageTitles: false
 	},
 	categories: [],
 	snippets: [],
@@ -47,7 +50,15 @@ function loadInitialData(): Database {
 		const stored = localStorage.getItem('copypasta_local_db');
 		if (stored) {
 			try {
-				return JSON.parse(stored);
+				const parsed = JSON.parse(stored);
+				if (parsed?.settings?.languages) {
+					parsed.settings.languages.forEach((l: Language) => {
+						if (l.showInMultiple === undefined) {
+							l.showInMultiple = l.id === 'en' || l.id === 'de';
+						}
+					});
+				}
+				return parsed;
 			} catch {
 				// ignore invalid JSON
 			}
@@ -132,6 +143,13 @@ class DbStore {
 			const file = gist.files['copypasta.json'];
 			if (file && file.content) {
 				const remoteData = JSON.parse(file.content) as Database;
+				if (remoteData?.settings?.languages) {
+					remoteData.settings.languages.forEach((l: Language) => {
+						if (l.showInMultiple === undefined) {
+							l.showInMultiple = l.id === 'en' || l.id === 'de';
+						}
+					});
+				}
 				const localDate = new Date(this.data.updatedAt || 0).getTime();
 				const remoteDate = new Date(remoteData.updatedAt || 0).getTime();
 				const lastSynced = this.getLastSyncedAt();
@@ -196,6 +214,13 @@ class DbStore {
 	}
 
 	forcePull(remoteData: Database) {
+		if (remoteData?.settings?.languages) {
+			remoteData.settings.languages.forEach((l: any) => {
+				if (l.showInMultiple === undefined) {
+					l.showInMultiple = l.id === 'en' || l.id === 'de';
+				}
+			});
+		}
 		this.conflictData = null;
 		this.data = remoteData;
 		this._saveLocal();

@@ -131,7 +131,8 @@
 		if (newLangId.trim() && newLangName.trim()) {
 			dbStore.data.settings.languages.push({
 				id: newLangId.trim(),
-				name: newLangName.trim()
+				name: newLangName.trim(),
+				showInMultiple: false
 			});
 			dbStore.save();
 			newLangId = '';
@@ -434,12 +435,26 @@
 				Configure the languages for your dual-mode or multi-mode snippets.
 			</p>
 
+			<div class="mb-4 flex items-center justify-between max-w-sm">
+				<span class="font-medium text-sm">Hide Language Titles in Multiple View</span>
+				<input
+					type="checkbox"
+					class="toggle toggle-primary"
+					checked={dbStore.data.settings.hideLanguageTitles}
+					onchange={(e) => {
+						dbStore.data.settings.hideLanguageTitles = e.currentTarget.checked;
+						dbStore.save();
+					}}
+				/>
+			</div>
+
 			<div class="overflow-x-auto">
 				<table class="table w-full table-zebra">
 					<thead>
 						<tr>
 							<th>ID (e.g. en)</th>
 							<th>Name (e.g. English)</th>
+							<th class="text-center">Show in Multiple</th>
 							<th class="w-16"></th>
 						</tr>
 					</thead>
@@ -448,6 +463,17 @@
 							<tr>
 								<td class="font-mono text-sm">{lang.id}</td>
 								<td>{lang.name}</td>
+								<td class="text-center">
+									<input
+										type="checkbox"
+										class="checkbox checkbox-sm checkbox-primary"
+										checked={lang.showInMultiple}
+										onchange={(e) => {
+											lang.showInMultiple = e.currentTarget.checked;
+											dbStore.save();
+										}}
+									/>
+								</td>
 								<td>
 									<button
 										class="btn btn-ghost text-error btn-sm"
@@ -478,6 +504,7 @@
 									onkeydown={(e) => e.key === 'Enter' && addLanguage()}
 								/>
 							</td>
+							<td></td>
 							<td>
 								<button
 									class="btn btn-primary btn-sm"

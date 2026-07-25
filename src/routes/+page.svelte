@@ -283,6 +283,7 @@
 						value={dbStore.globalLanguageId}
 						onchange={(e) => dbStore.setGlobalLanguageId(e.currentTarget.value)}
 					>
+						<option value="multiple">Multiple</option>
 						{#each dbStore.data.settings.languages as lang (lang.id)}
 							<option value={lang.id}>{lang.name}</option>
 						{/each}

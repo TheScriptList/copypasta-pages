@@ -16,7 +16,7 @@
 		onEditComplete?: () => void;
 	} = $props();
 
-	let copied = $state(false);
+	let copiedId = $state<string | null>(null);
 
 	// svelte-ignore state_referenced_locally
 	let isEditing = $state(startInEditMode);
@@ -25,6 +25,9 @@
 	let deleteModal: HTMLDialogElement;
 
 	let activeContent = $derived(snippet.content[dbStore.globalLanguageId] || '');
+	let languagesShowingInMultiple = $derived(
+		dbStore.data.settings.languages.filter((l) => l.showInMultiple)
+	);
 
 	import { onMount, onDestroy, untrack } from 'svelte';
 
@@ -91,12 +94,14 @@
 		return rtf.format(diffInYears, 'year');
 	}
 
-	async function handleCopy() {
-		if (isEditing || isReorderMode) return;
+	async function handleCopy(content: string, id: string = 'single') {
+		if (isEditing || isReorderMode || !content) return;
 		try {
-			await navigator.clipboard.writeText(activeContent);
-			copied = true;
-			setTimeout(() => (copied = false), 2000);
+			await navigator.clipboard.writeText(content);
+			copiedId = id;
+			setTimeout(() => {
+				if (copiedId === id) copiedId = null;
+			}, 2000);
 		} catch (err) {
 			console.error('Failed to copy text: ', err);
 		}
@@ -227,27 +232,73 @@
 				</div>
 			{:else}
 				<div in:slide={{ duration: 250, delay: 250 }} out:slide={{ duration: 250 }}>
-					<button
-						class="group relative block min-h-[4rem] w-full rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
-						onclick={handleCopy}
-						aria-label="Copy snippet"
-						disabled={isReorderMode}
-					>
-						{activeContent || 'Empty snippet'}
-						{#if copied}
-							<div
-								class="absolute inset-0 flex items-center justify-center rounded-lg bg-success/20 backdrop-blur-sm"
-								transition:fade={{ duration: 150 }}
-							>
-								<div
-									class="flex items-center gap-2 rounded-full bg-success px-3 py-1 font-sans font-bold text-success-content shadow-sm"
-									transition:scale={{ duration: 300, start: 0.8, opacity: 0, easing: backOut }}
+					{#if dbStore.globalLanguageId === 'multiple'}
+						<div class="flex flex-col gap-3">
+							{#each languagesShowingInMultiple as lang (lang.id)}
+								{#if snippet.content[lang.id]}
+									<div
+										class="flex flex-col gap-1 {dbStore.data.settings.hideLanguageTitles ? 'tooltip tooltip-top hover:before:delay-1000 hover:after:delay-1000 before:z-50' : ''}"
+										data-tip={dbStore.data.settings.hideLanguageTitles ? lang.name : null}
+									>
+										{#if !dbStore.data.settings.hideLanguageTitles}
+											<span class="px-1 text-xs font-bold opacity-60">{lang.name}</span>
+										{/if}
+										<button
+											class="group relative block min-h-[3rem] w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
+											onclick={() => handleCopy(snippet.content[lang.id], lang.id)}
+											aria-label="Copy snippet for {lang.name}"
+											disabled={isReorderMode}
+										>
+											{snippet.content[lang.id]}
+											{#if copiedId === lang.id}
+												<div
+													class="absolute inset-0 flex items-center justify-center rounded-lg bg-success/20 backdrop-blur-sm"
+													transition:fade={{ duration: 150 }}
+												>
+													<div
+														class="flex items-center gap-2 rounded-full bg-success px-3 py-1 font-sans font-bold text-success-content shadow-sm"
+														transition:scale={{ duration: 300, start: 0.8, opacity: 0, easing: backOut }}
+													>
+														<Check class="h-4 w-4" /> Copied
+													</div>
+												</div>
+											{/if}
+										</button>
+									</div>
+								{/if}
+							{/each}
+							{#if languagesShowingInMultiple.every((lang) => !snippet.content[lang.id])}
+								<button
+									class="group relative block min-h-[3rem] w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
+									disabled={true}
 								>
-									<Check class="h-4 w-4" /> Copied!
+									Empty snippet
+								</button>
+							{/if}
+						</div>
+					{:else}
+						<button
+							class="group relative block min-h-[3rem] w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
+							onclick={() => handleCopy(activeContent, 'single')}
+							aria-label="Copy snippet"
+							disabled={isReorderMode}
+						>
+							{activeContent || 'Empty snippet'}
+							{#if copiedId === 'single'}
+								<div
+									class="absolute inset-0 flex items-center justify-center rounded-lg bg-success/20 backdrop-blur-sm"
+									transition:fade={{ duration: 150 }}
+								>
+									<div
+										class="flex items-center gap-2 rounded-full bg-success px-3 py-1 font-sans font-bold text-success-content shadow-sm"
+										transition:scale={{ duration: 300, start: 0.8, opacity: 0, easing: backOut }}
+									>
+										<Check class="h-4 w-4" /> Copied
+									</div>
 								</div>
-							</div>
-						{/if}
-					</button>
+							{/if}
+						</button>
+					{/if}
 				</div>
 			{/if}
 		</div>
