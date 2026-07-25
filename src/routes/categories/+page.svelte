@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { dbStore } from '$lib/stores/db.svelte';
 	import { Trash2, GripVertical, Plus, ChevronUp, ChevronDown } from '@lucide/svelte';
-	import Sortable from 'sortablejs';
+	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
 	import { onMount } from 'svelte';
+	import { flip } from 'svelte/animate';
 
 	let newCategoryName = $state('');
 	let newCategoryEmoji = $state('');
@@ -21,26 +22,22 @@
 		};
 	}
 
-	function sortable(node: HTMLElement) {
-		const sortableInstance = new Sortable(node, {
-			animation: 150,
-			handle: '.drag-handle',
-			onEnd: (evt) => {
-				const { oldIndex, newIndex } = evt;
-				if (oldIndex !== undefined && newIndex !== undefined && oldIndex !== newIndex) {
-					const items = [...dbStore.data.categories];
-					const [movedItem] = items.splice(oldIndex, 1);
-					items.splice(newIndex, 0, movedItem);
-					dbStore.data.categories = items;
-					dbStore.save();
-				}
-			}
-		});
-		return {
-			destroy() {
-				sortableInstance.destroy();
-			}
-		};
+	function handleDrop(state: DragDropState<typeof dbStore.data.categories[0]>) {
+		const { draggedItem, targetContainer, dropPosition } = state;
+		if (!targetContainer) return;
+		
+		const dragIndex = dbStore.data.categories.findIndex((c) => c.id === draggedItem.id);
+		let dropIndex = parseInt(targetContainer ?? '0');
+		if (dropPosition === 'after') dropIndex++;
+
+		if (dragIndex !== -1) {
+			const items = [...dbStore.data.categories];
+			const [category] = items.splice(dragIndex, 1);
+			const adjusted = dragIndex < dropIndex ? dropIndex - 1 : dropIndex;
+			items.splice(adjusted, 0, category);
+			dbStore.data.categories = items;
+			dbStore.save();
+		}
 	}
 
 	function moveCategory(index: number, direction: -1 | 1) {
@@ -135,9 +132,13 @@
 			{#if dbStore.data.categories.length === 0}
 				<div class="p-8 text-center text-base-content/60">No categories yet. Add one above.</div>
 			{:else}
-				<ul class="divide-y divide-base-200" use:sortable>
+				<ul class="divide-y divide-base-200">
 					{#each dbStore.data.categories as category, index (category.id)}
+						{@const snippetCount = dbStore.data.snippets.filter((s) => s.categoryId === category.id).length}
 						<li
+							animate:flip={{ duration: 300 }}
+							use:draggable={{ container: index.toString(), dragData: category, handle: '.drag-handle' }}
+							use:droppable={{ container: index.toString(), callbacks: { onDrop: handleDrop } }}
 							class="flex items-center gap-4 bg-base-100 p-4 transition-colors hover:bg-base-200/50"
 						>
 							<div
@@ -193,6 +194,10 @@
 								/>
 							</div>
 
+							<div class="badge badge-soft badge-sm whitespace-nowrap">
+								{snippetCount} {snippetCount === 1 ? 'snippet' : 'snippets'}
+							</div>
+
 							<button
 								class="btn btn-ghost text-error btn-sm"
 								onclick={() => openDeleteModal(category.id)}
@@ -212,7 +217,8 @@
 		<h3 class="flex items-center gap-2 text-lg font-bold text-error">
 			<Trash2 class="h-5 w-5" /> Delete Category?
 		</h3>
-		<p class="py-4">Are you sure you want to delete this category? This action cannot be undone.</p>
+		<p class="py-2">Are you sure you want to delete this category? This action cannot be undone.</p>
+		<p class="text-sm text-base-content/60">All snippets in this category will be moved to Uncategorized.</p>
 		<div class="modal-action">
 			<form method="dialog">
 				<button class="btn" onclick={() => (categoryToDeleteId = null)}>Cancel</button>

@@ -244,7 +244,7 @@
 											<span class="px-1 text-xs font-bold opacity-60">{lang.name}</span>
 										{/if}
 										<button
-											class="group relative block min-h-[3rem] w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
+											class="group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
 											onclick={() => handleCopy(snippet.content[lang.id], lang.id)}
 											aria-label="Copy snippet for {lang.name}"
 											disabled={isReorderMode}
@@ -269,7 +269,7 @@
 							{/each}
 							{#if languagesShowingInMultiple.every((lang) => !snippet.content[lang.id])}
 								<button
-									class="group relative block min-h-[3rem] w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
+									class="group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
 									disabled={true}
 								>
 									Empty snippet
@@ -278,7 +278,7 @@
 						</div>
 					{:else}
 						<button
-							class="group relative block min-h-[3rem] w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
+							class="group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
 							onclick={() => handleCopy(activeContent, 'single')}
 							aria-label="Copy snippet"
 							disabled={isReorderMode}

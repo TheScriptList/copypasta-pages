@@ -14,13 +14,12 @@
 		X
 	} from '@lucide/svelte';
 	import { slide } from 'svelte/transition';
-	import Sortable from 'sortablejs';
+	import { flip } from 'svelte/animate';
+	import { draggable, droppable, type DragDropState } from '@thisux/sveltednd';
 
 	let selectedCategoryId = $state<string | null>(null);
 	let newlyCreatedSnippetId = $state<string | null>(null);
 	let isReorderMode = $state(false);
-	let draggedSnippetId = $state<string | null>(null);
-	let dragOverCategoryId = $state<string | null>(null);
 	let massDeleteModal: HTMLDialogElement;
 
 	function confirmMassDelete() {
@@ -82,114 +81,52 @@
 		dbStore.save();
 	}
 
-	function sortableGroup(node: HTMLElement, categoryId: string) {
-		let sortableInstance: Sortable | null = null;
+	function handleDrop(state: DragDropState<typeof dbStore.data.snippets[0]>) {
+		const { draggedItem, targetContainer, dropPosition } = state;
+		if (!targetContainer) return;
 
-		$effect(() => {
-			if (isReorderMode) {
-				sortableInstance = new Sortable(node, {
-					animation: 150,
-					delay: 100,
-					delayOnTouchOnly: true,
-					group: 'snippets',
-					onStart: (evt) => {
-						draggedSnippetId = evt.item.dataset.id || null;
-					},
-					onEnd: (evt) => {
-						draggedSnippetId = null;
-						dragOverCategoryId = null;
+		const splitIndex = targetContainer.lastIndexOf(':');
+		let targetCategoryId = targetContainer;
+		let dropIndex = -1;
+		
+		if (splitIndex !== -1) {
+			targetCategoryId = targetContainer.substring(0, splitIndex);
+			dropIndex = parseInt(targetContainer.substring(splitIndex + 1));
+		}
 
-						// Within same group
-						if (evt.to === node) {
-							const { oldIndex, newIndex } = evt;
-							if (oldIndex !== undefined && newIndex !== undefined && oldIndex !== newIndex) {
-								const snipsInGroup = dbStore.data.snippets.filter(
-									(s) => (s.categoryId || '') === categoryId
-								);
-								const item = snipsInGroup[oldIndex];
-								const targetItem = snipsInGroup[newIndex];
+		if (dropPosition === 'after') dropIndex++;
 
-								if (item && targetItem) {
-									const dbOldIndex = dbStore.data.snippets.findIndex((s) => s.id === item.id);
-									const dbNewIndex = dbStore.data.snippets.findIndex((s) => s.id === targetItem.id);
+		const snippet = draggedItem;
+		const dbOldIndex = dbStore.data.snippets.findIndex((s) => s.id === snippet.id);
+		if (dbOldIndex === -1) return;
 
-									if (dbOldIndex !== -1 && dbNewIndex !== -1) {
-										const items = [...dbStore.data.snippets];
-										const [moved] = items.splice(dbOldIndex, 1);
-										items.splice(dbNewIndex, 0, moved);
-										dbStore.data.snippets = items;
-										dbStore.save();
-									}
-								}
-							}
-						}
-					},
-					onAdd: (evt) => {
-						const snippetId = evt.item.dataset.id;
-						const { newIndex } = evt;
-						if (snippetId && newIndex !== undefined) {
-							const snippetIndex = dbStore.data.snippets.findIndex((s) => s.id === snippetId);
-							if (snippetIndex !== -1) {
-								const items = [...dbStore.data.snippets];
-								const [moved] = items.splice(snippetIndex, 1);
-								moved.categoryId = categoryId;
-								moved.updatedAt = new Date().toISOString();
+		const items = [...dbStore.data.snippets];
+		const [moved] = items.splice(dbOldIndex, 1);
+		moved.categoryId = targetCategoryId;
+		moved.updatedAt = new Date().toISOString();
 
-								const snipsInGroup = items.filter((s) => (s.categoryId || '') === categoryId);
-								const targetItem = snipsInGroup[newIndex];
+		if (dropIndex !== -1) {
+			const snipsInGroup = items.filter((s) => (s.categoryId || '') === targetCategoryId);
+			const targetItem = snipsInGroup[dropIndex];
 
-								if (targetItem) {
-									const dbTargetIndex = items.findIndex((s) => s.id === targetItem.id);
-									items.splice(dbTargetIndex, 0, moved);
-								} else {
-									items.push(moved);
-								}
-
-								dbStore.data.snippets = items;
-								dbStore.save();
-							}
-						}
-					}
-				});
+			if (targetItem) {
+				const dbTargetIndex = items.findIndex((s) => s.id === targetItem.id);
+				items.splice(dbTargetIndex, 0, moved);
 			} else {
-				if (sortableInstance) {
-					sortableInstance.destroy();
-					sortableInstance = null;
+				if (snipsInGroup.length > 0) {
+					const lastItem = snipsInGroup[snipsInGroup.length - 1];
+					const dbLastIndex = items.findIndex((s) => s.id === lastItem.id);
+					items.splice(dbLastIndex + 1, 0, moved);
+				} else {
+					items.push(moved);
 				}
 			}
-		});
-
-		return {
-			destroy() {
-				if (sortableInstance) sortableInstance.destroy();
-			}
-		};
-	}
-
-	function handleDragOver(e: DragEvent, categoryId: string | null) {
-		if (isReorderMode && draggedSnippetId && categoryId !== null) {
-			e.preventDefault();
-			dragOverCategoryId = categoryId;
+		} else {
+			items.push(moved);
 		}
-	}
 
-	function handleDragLeave(e: DragEvent, categoryId: string | null) {
-		if (dragOverCategoryId === categoryId) {
-			dragOverCategoryId = null;
-		}
-	}
-
-	function handleDrop(e: DragEvent, categoryId: string | null) {
-		if (isReorderMode && draggedSnippetId && categoryId !== null) {
-			e.preventDefault();
-			const snippet = dbStore.data.snippets.find((s) => s.id === draggedSnippetId);
-			if (snippet && snippet.categoryId !== categoryId) {
-				snippet.categoryId = categoryId;
-				snippet.updatedAt = new Date().toISOString();
-				dbStore.save();
-			}
-			dragOverCategoryId = null;
-		}
+		dbStore.data.snippets = items;
+		dbStore.save();
 	}
 </script>
 
@@ -234,7 +171,14 @@
 			<div class="sticky top-24 rounded-box border border-base-200 bg-base-100 p-4 shadow-sm">
 				<h2 class="mb-4 px-2 text-lg font-bold">Categories</h2>
 				<ul class="menu w-full p-0">
-					<li>
+					<li
+						use:droppable={{
+							container: '',
+							disabled: !isReorderMode,
+							callbacks: { onDrop: handleDrop },
+							attributes: { dragOverClass: 'bg-primary/20 outline-2 outline-offset-[-2px] outline-primary/50 outline-dashed rounded-box' }
+						}}
+					>
 						<button
 							class={!selectedCategoryId ? 'active text-left' : 'text-left'}
 							onclick={() => (selectedCategoryId = null)}
@@ -244,12 +188,15 @@
 					</li>
 					{#each dbStore.data.categories as category (category.id)}
 						<li
-							ondragover={(e) => handleDragOver(e, category.id)}
-							ondragleave={(e) => handleDragLeave(e, category.id)}
-							ondrop={(e) => handleDrop(e, category.id)}
+							use:droppable={{
+								container: category.id,
+								disabled: !isReorderMode,
+								callbacks: { onDrop: handleDrop },
+								attributes: { dragOverClass: 'bg-primary/20 outline-2 outline-offset-[-2px] outline-primary/50 outline-dashed rounded-box' }
+							}}
 						>
 							<button
-								class={`text-left transition-colors ${selectedCategoryId === category.id ? 'active' : ''} ${dragOverCategoryId === category.id ? 'bg-primary/20 outline-2 outline-offset-[-2px] outline-primary/50 outline-dashed' : ''}`}
+								class={`text-left transition-colors ${selectedCategoryId === category.id ? 'active' : ''}`}
 								onclick={() => (selectedCategoryId = category.id)}
 							>
 								{#if category.icon}
@@ -303,7 +250,7 @@
 			{#if dbStore.editingSnippetIds.length > 1}
 				<div
 					class="mb-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center"
-					transition:slide={{ duration: 200 }}
+					transition:slide={{ duration: 300 }}
 				>
 					<div class="flex items-center gap-2 text-sm font-bold text-base-content/70">
 						<Edit2 class="h-4 w-4" />
@@ -333,7 +280,12 @@
 			{/if}
 
 			{#if groupedSnippets.length === 0}
-				<div class="rounded-box border border-dashed border-base-200 bg-base-100 py-12 text-center">
+				<div class="rounded-box border border-dashed border-base-200 bg-base-100 py-12 text-center"
+					use:droppable={{
+						container: selectedCategoryId || '',
+						disabled: !isReorderMode,
+						callbacks: { onDrop: handleDrop }
+					}}>
 					<p class="mb-4 text-base-content/60">No snippets found in this category.</p>
 					<button class="btn btn-outline btn-sm" onclick={addSnippet}>
 						Create First Snippet
@@ -351,19 +303,35 @@
 							{/if}
 
 							<div
-								class={`grid gap-4 ${isReorderMode ? 'cursor-grab active:cursor-grabbing' : ''} ${dbStore.columnCount === '1' ? 'grid-cols-1' : dbStore.columnCount === '3' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : dbStore.columnCount === '4' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : dbStore.columnCount === 'auto' ? '' : 'grid-cols-1 lg:grid-cols-2'}`}
+								class={`grid gap-4 ${dbStore.columnCount === '1' ? 'grid-cols-1' : dbStore.columnCount === '3' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : dbStore.columnCount === '4' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : dbStore.columnCount === 'auto' ? '' : 'grid-cols-1 lg:grid-cols-2'}`}
 								style={dbStore.columnCount === 'auto' ? 'grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));' : ''}
-								use:sortableGroup={group.categoryId}
 							>
-								{#each group.snippets as snippet (snippet.id)}
-									<SnippetCard
-										{snippet}
-										startInEditMode={snippet.id === newlyCreatedSnippetId}
-										{isReorderMode}
-										onEditComplete={() => {
-											if (snippet.id === newlyCreatedSnippetId) newlyCreatedSnippetId = null;
+								{#each group.snippets as snippet, index (snippet.id)}
+									<div
+										animate:flip={{ duration: 300 }}
+										class={isReorderMode ? 'cursor-grab active:cursor-grabbing' : ''}
+										use:draggable={{
+											container: group.categoryId + ':' + index,
+											dragData: snippet,
+											disabled: !isReorderMode,
+											attributes: { draggingClass: 'opacity-50 scale-105 transition-transform duration-200 z-50' }
 										}}
-									/>
+										use:droppable={{
+											container: group.categoryId + ':' + index,
+											direction: 'grid',
+											disabled: !isReorderMode,
+											callbacks: { onDrop: handleDrop }
+										}}
+									>
+										<SnippetCard
+											{snippet}
+											startInEditMode={snippet.id === newlyCreatedSnippetId}
+											{isReorderMode}
+											onEditComplete={() => {
+												if (snippet.id === newlyCreatedSnippetId) newlyCreatedSnippetId = null;
+											}}
+										/>
+									</div>
 								{/each}
 							</div>
 						</div>
@@ -390,3 +358,11 @@
 		</div>
 	</div>
 </dialog>
+
+<style>
+	/* Hide sveltednd blue drop indicator lines in the categories menu */
+	.menu :global(.drop-before::before),
+	.menu :global(.drop-after::after) {
+		display: none !important;
+	}
+</style>
