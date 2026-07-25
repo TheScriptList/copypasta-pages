@@ -38,7 +38,7 @@ export const DEFAULT_DB: Database = {
 	},
 	categories: [],
 	snippets: [],
-	updatedAt: new Date().toISOString()
+	updatedAt: '1970-01-01T00:00:00.000Z'
 };
 
 function loadInitialData(): Database {
@@ -73,7 +73,7 @@ class DbStore {
 		}
 	}
 
-	async load() {
+	async sync() {
 		if (!authStore.isValid) {
 			this.syncStatus = 'Offline/No Auth';
 			return;
@@ -104,12 +104,16 @@ class DbStore {
 				if (remoteDate > localDate || !this.data.updatedAt) {
 					this.data = remoteData;
 					this._saveLocal();
+					this.syncStatus = 'Synced';
+				} else if (localDate > remoteDate) {
+					await this._pushToGist();
+				} else {
+					this.syncStatus = 'Synced';
 				}
 			} else {
 				// Initialize gist if empty
-				await this.save();
+				await this._pushToGist();
 			}
-			this.syncStatus = 'Synced';
 		} catch (e: any) {
 			this.error = e.message;
 			this.syncStatus = 'Error';
@@ -124,10 +128,23 @@ class DbStore {
 		}
 	}
 
+	private _saveTimeout: ReturnType<typeof setTimeout> | null = null;
+
 	async save() {
 		this.data.updatedAt = new Date().toISOString();
 		this._saveLocal();
+		
+		if (this._saveTimeout) {
+			clearTimeout(this._saveTimeout);
+		}
+		
+		this._saveTimeout = setTimeout(() => {
+			this._saveTimeout = null;
+			this._pushToGist();
+		}, 1000);
+	}
 
+	private async _pushToGist() {
 		if (!authStore.isValid) {
 			this.syncStatus = 'Local Only';
 			return;

@@ -3,6 +3,7 @@
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { dbStore, DEFAULT_DB } from '$lib/stores/db.svelte';
 	import { Save, Trash2, Plus, Cloud, Loader2, ExternalLink, AlertTriangle } from 'lucide-svelte';
+	import { Languages } from '@lucide/svelte';
 
 	let pat = $state(authStore.token);
 	let gistId = $state(authStore.gistId);
@@ -71,7 +72,7 @@
 
 		errorMessage = null;
 		authStore.save(pat, gistId);
-		dbStore.load(); // Load data from new gist
+		dbStore.sync(); // Load data from new gist
 	}
 
 	let newLangId = $state('');
@@ -123,60 +124,60 @@
 				<a href="https://github.com/settings/tokens/new?scopes=gist&description=Copypasta" target="_blank" rel="noopener noreferrer" class="link link-primary inline-flex items-center gap-1">Generate a PAT <ExternalLink class="w-3 h-3"/></a>
 			</p>
 			
-			<div class="form-control w-full">
-				<label class="label" for="pat">
-					<span class="label-text font-medium">Personal Access Token (PAT)</span>
-				</label>
-				<input 
-					id="pat"
-					type="password" 
-					placeholder="ghp_..." 
-					class="input input-bordered w-full" 
-					class:input-error={patError}
-					oninput={() => { patError = false; errorMessage = null; }}
-					bind:value={pat}
-				/>
-				<div class="label">
-					<span class="label-text-alt text-base-content/60">Needs the "gist" scope.</span>
-				</div>
-			</div>
+			<form onsubmit={(e) => { e.preventDefault(); saveAuth(); }}>
+				<fieldset class="fieldset w-full">
+					<legend class="fieldset-legend font-medium">Personal Access Token (PAT)</legend>
+					<input 
+						id="pat"
+						name="password"
+						autocomplete="current-password"
+						type="password" 
+						placeholder="ghp_..." 
+						class="input input-bordered w-full" 
+						class:input-error={patError}
+						oninput={() => { patError = false; errorMessage = null; }}
+						bind:value={pat}
+					/>
+					<p class="label text-base-content/60">Needs the "gist" scope.</p>
+				</fieldset>
 
-			<div class="form-control w-full">
-				<label class="label" for="gist">
-					<span class="label-text font-medium">Gist ID</span>
-				</label>
-				<input 
-					id="gist"
-					type="text" 
-					placeholder="e.g. 1a2b3c4d5e6f7g8h9i0j" 
-					class="input input-bordered w-full" 
-					class:input-error={gistError}
-					oninput={() => { gistError = false; errorMessage = null; }}
-					bind:value={gistId}
-				/>
-			</div>
+				<fieldset class="fieldset w-full">
+					<legend class="fieldset-legend font-medium">Gist ID</legend>
+					<input 
+						id="gist"
+						name="username"
+						autocomplete="username"
+						type="text" 
+						placeholder="e.g. 1a2b3c4d5e6f7g8h9i0j" 
+						class="input input-bordered w-full" 
+						class:input-error={gistError}
+						oninput={() => { gistError = false; errorMessage = null; }}
+						bind:value={gistId}
+					/>
+				</fieldset>
 
-			{#if errorMessage}
-				<div class="alert alert-error mt-4 shadow-sm text-sm p-3">
-					<AlertTriangle class="w-4 h-4 shrink-0" />
-					<span>{errorMessage}</span>
-				</div>
-			{/if}
+				{#if errorMessage}
+					<div class="alert alert-error mt-4 shadow-sm text-sm p-3">
+						<AlertTriangle class="w-4 h-4 shrink-0" />
+						<span>{errorMessage}</span>
+					</div>
+				{/if}
 
-			<div class="card-actions flex-wrap justify-between items-center mt-6 pt-4 border-t border-base-200">
-				<div class={gistId ? "tooltip tooltip-right" : ""} data-tip={gistId ? "To create a new one the current ID has to be cleared." : null}>
-					<button class="btn btn-secondary" onclick={createNewGist} disabled={isCreatingGist || !!gistId}>
-						{#if isCreatingGist}
-							<Loader2 class="w-4 h-4 animate-spin" />
-						{:else}
-							<Plus class="w-4 h-4" /> Create new Gist
-						{/if}
+				<div class="card-actions flex-wrap justify-between items-center mt-6 pt-4 border-t border-base-200">
+					<div class={gistId ? "sm:tooltip sm:tooltip-right" : ""} data-tip={gistId ? "To create a new one the current ID has to be cleared." : null}>
+						<button type="button" class="btn btn-secondary" onclick={createNewGist} disabled={isCreatingGist || !!gistId}>
+							{#if isCreatingGist}
+								<Loader2 class="w-4 h-4 animate-spin" />
+							{:else}
+								<Plus class="w-4 h-4" /> Create new Gist
+							{/if}
+						</button>
+					</div>
+					<button type="submit" class="btn btn-primary">
+						<Save class="w-4 h-4" /> Save
 					</button>
 				</div>
-				<button class="btn btn-primary" onclick={saveAuth}>
-					<Save class="w-4 h-4" /> Save
-				</button>
-			</div>
+			</form>
 
 			{#if authStore.isValid || dbStore.syncStatus === 'Error'}
 				<div class="mt-4 p-3 bg-base-200/50 rounded-lg text-sm flex flex-col gap-2">
@@ -193,6 +194,16 @@
 								<div class="badge badge-ghost">{dbStore.syncStatus}</div>
 							{/if}
 						</div>
+					</div>
+					
+					<div class="flex justify-end">
+						<button class="btn btn-sm btn-outline" onclick={() => dbStore.sync()} disabled={dbStore.isLoading}>
+							{#if dbStore.isLoading}
+								<Loader2 class="w-3 h-3 animate-spin" /> Syncing...
+							{:else}
+								<Cloud class="w-3 h-3" /> Sync Now
+							{/if}
+						</button>
 					</div>
 					
 					{#if dbStore.syncStatus === 'Error' && dbStore.error}
@@ -220,7 +231,10 @@
 	<!-- Languages Settings -->
 	<section class="card bg-base-100 shadow-sm border border-base-200">
 		<div class="card-body">
-			<h2 class="card-title">Languages</h2>
+			<h2 class="card-title">
+				<Languages class="w-5 h-5" />
+				Languages
+			</h2>
 			<p class="text-sm text-base-content/70 mb-4">
 				Configure the languages for your dual-mode or multi-mode snippets.
 			</p>

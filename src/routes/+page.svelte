@@ -181,7 +181,7 @@
 		<Loader2 class="w-12 h-12 animate-spin text-primary" />
 	</div>
 {:else}
-	<div class="flex flex-col md:flex-row gap-6">
+	<div class="flex flex-col md:flex-row md:items-start gap-6">
 		<!-- Sidebar Categories -->
 		<div class="w-full md:w-64 flex-shrink-0">
 			<div class="bg-base-100 p-4 rounded-box shadow-sm border border-base-200 sticky top-24">

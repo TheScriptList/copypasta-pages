@@ -82,7 +82,21 @@
 		dbStore.data.snippets = dbStore.data.snippets.filter(s => s.id !== snippet.id);
 		dbStore.save();
 	}
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (!isEditing) return;
+		if (e.key === 's' && (e.ctrlKey || e.metaKey)) {
+			e.preventDefault();
+			saveEdit();
+		}
+		if (e.key === 'Escape') {
+			e.preventDefault();
+			cancelEdit();
+		}
+	}
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <style>
 	@keyframes shake {
@@ -95,9 +109,13 @@
 	}
 </style>
 
-<div class={`card bg-base-100 shadow-xl border border-base-200 snippet-card ${isReorderMode ? 'shake-animation cursor-grab active:cursor-grabbing' : ''}`} data-id={snippet.id}>
+<div 
+	class={`card bg-base-100 shadow-xl border border-base-200 snippet-card ${isReorderMode ? 'shake-animation cursor-grab active:cursor-grabbing' : ''}`} 
+	data-id={snippet.id}
+	transition:scale={{ duration: 300, start: 0.9, opacity: 0, easing: backOut }}
+>
 	<div class="card-body p-4 pointer-events-none">
-		<div class={`flex justify-between items-start mb-3 ${isReorderMode ? 'opacity-50' : 'pointer-events-auto'}`}>
+		<div class={`flex justify-between items-start ${isReorderMode ? 'opacity-50' : 'pointer-events-auto'}`}>
 			<div class="flex flex-col gap-1">
 				<div class="tooltip tooltip-bottom tooltip-right" data-tip={new Date(snippet.updatedAt).toLocaleString()}>
 					<div class="text-xs text-base-content/50 flex items-center gap-1 cursor-help w-max mt-1">

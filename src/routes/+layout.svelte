@@ -11,7 +11,7 @@
 
 	onMount(() => {
 		if (authStore.isValid) {
-			dbStore.load();
+			dbStore.sync();
 		}
 	});
 </script>

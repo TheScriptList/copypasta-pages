@@ -6,6 +6,7 @@ A static SvelteKit web application for managing and syncing your "copypastas" (s
 
 - **GitHub Gist Sync**: Securely store and sync your copypastas across devices.
 - **Dual/Multi-Language Support**: Configure custom languages for side-by-side or multi-mode snippet views.
+- **Keyboard Shortcuts**: Quickly save all editing snippets with `Ctrl+S` (or `Cmd+S`), and cancel edits with `Esc`.
 - **Static & Fast**: Built with SvelteKit and DaisyUI, running entirely in the browser.
 - **PWA Ready**: Works offline after the first load.
 
@@ -13,7 +14,7 @@ A static SvelteKit web application for managing and syncing your "copypastas" (s
 
 1. **Clone the repository:**
    ```bash
-   git clone <repo-url>
+   git clone https://github.com/TheScriptList/copypasta-pages.git
    cd copypasta-pages
    ```
 
