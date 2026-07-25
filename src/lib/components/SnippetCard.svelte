@@ -16,9 +16,46 @@
 
 	let activeContent = $derived(snippet.content[dbStore.globalLanguageId] || '');
 
+	import { onMount, onDestroy, untrack } from 'svelte';
+
+	$effect(() => {
+		const editing = isEditing;
+		const id = snippet.id;
+		untrack(() => {
+			if (editing) {
+				if (!dbStore.editingSnippetIds.includes(id)) {
+					dbStore.editingSnippetIds.push(id);
+				}
+			} else {
+				dbStore.editingSnippetIds = dbStore.editingSnippetIds.filter(existingId => existingId !== id);
+			}
+		});
+	});
+
 	$effect(() => {
 		if (isReorderMode && isEditing) {
 			isEditing = false;
+		}
+	});
+
+	function handleGlobalSave() {
+		if (isEditing) saveEdit();
+	}
+	
+	function handleGlobalCancel() {
+		if (isEditing) cancelEdit();
+	}
+
+	onMount(() => {
+		window.addEventListener('save-all', handleGlobalSave);
+		window.addEventListener('cancel-all', handleGlobalCancel);
+	});
+
+	onDestroy(() => {
+		dbStore.editingSnippetIds = dbStore.editingSnippetIds.filter(id => id !== snippet.id);
+		if (typeof window !== 'undefined') {
+			window.removeEventListener('save-all', handleGlobalSave);
+			window.removeEventListener('cancel-all', handleGlobalCancel);
 		}
 	});
 

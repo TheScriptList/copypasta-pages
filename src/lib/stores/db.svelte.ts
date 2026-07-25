@@ -60,6 +60,7 @@ class DbStore {
 	globalLanguageId = $state<string>(
 		(browser && localStorage.getItem('copypasta_local_lang')) || 'en'
 	);
+	editingSnippetIds = $state<string[]>([]);
 	isLoading = $state(false);
 	error = $state<string | null>(null);
 	syncStatus = $state<'Offline/No Auth' | 'Syncing...' | 'Synced' | 'Error' | 'Local Only'>(

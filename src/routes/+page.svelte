@@ -3,7 +3,8 @@
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { base } from '$app/paths';
 	import SnippetCard from '$lib/components/SnippetCard.svelte';
-	import { Loader2, Plus, ArrowRight, AlertTriangle, ArrowUpDown } from 'lucide-svelte';
+	import { Loader2, Plus, AlertTriangle, ArrowUpDown, Edit2, Trash2, Save, X } from 'lucide-svelte';
+	import { slide } from 'svelte/transition';
 	import Sortable from 'sortablejs';
 
 	let selectedCategoryId = $state<string | null>(null);
@@ -11,6 +12,13 @@
 	let isReorderMode = $state(false);
 	let draggedSnippetId = $state<string | null>(null);
 	let dragOverCategoryId = $state<string | null>(null);
+	let massDeleteModal: HTMLDialogElement;
+
+	function confirmMassDelete() {
+		dbStore.data.snippets = dbStore.data.snippets.filter(s => !dbStore.editingSnippetIds.includes(s.id));
+		dbStore.editingSnippetIds = [];
+		dbStore.save();
+	}
 
 	let groupedSnippets = $derived(
 		(() => {
@@ -218,7 +226,7 @@
 
 		<!-- Snippets Grid -->
 		<div class="flex-1">
-			<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+			<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
 				<h1 class="text-2xl font-bold">
 					{selectedCategoryId 
 						? dbStore.data.categories.find(c => c.id === selectedCategoryId)?.name 
@@ -245,6 +253,26 @@
 					</button>
 				</div>
 			</div>
+
+			{#if dbStore.editingSnippetIds.length > 1}
+				<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4" transition:slide={{duration: 200}}>
+					<div class="flex items-center gap-2 font-bold text-sm text-base-content/70">
+						<Edit2 class="w-4 h-4" />
+						Editing {dbStore.editingSnippetIds.length} snippets
+					</div>
+					<div class="flex gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+						<button class="btn btn-sm btn-error btn-ghost flex-1 sm:flex-none" onclick={() => massDeleteModal.showModal()}>
+							<Trash2 class="w-4 h-4" /> Delete All
+						</button>
+						<button class="btn btn-sm btn-ghost flex-1 sm:flex-none" onclick={() => window.dispatchEvent(new CustomEvent('cancel-all'))}>
+							<X class="w-4 h-4" /> Cancel All
+						</button>
+						<button class="btn btn-sm btn-success flex-1 sm:flex-none" onclick={() => window.dispatchEvent(new CustomEvent('save-all'))}>
+							<Save class="w-4 h-4" /> Save All
+						</button>
+					</div>
+				</div>
+			{/if}
 
 			{#if groupedSnippets.length === 0}
 				<div class="text-center py-12 bg-base-100 rounded-box border border-base-200 border-dashed">
@@ -280,3 +308,18 @@
 		</div>
 	</div>
 {/if}
+
+<dialog bind:this={massDeleteModal} class="modal">
+	<div class="modal-box">
+		<h3 class="font-bold text-lg text-error flex items-center gap-2">
+			<Trash2 class="w-5 h-5" /> Delete {dbStore.editingSnippetIds.length} Snippets?
+		</h3>
+		<p class="py-4">Are you sure you want to delete all currently editing snippets? This action cannot be undone.</p>
+		<div class="modal-action">
+			<form method="dialog">
+				<button class="btn">Cancel</button>
+				<button class="btn btn-error" onclick={confirmMassDelete}>Delete All</button>
+			</form>
+		</div>
+	</div>
+</dialog>
