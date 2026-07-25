@@ -1,2 +1,52 @@
 @import 'tailwindcss';
 @plugin 'daisyui';
+
+/* SvelteDnD base drag-and-drop state styles */
+.svelte-dnd-draggable { touch-action: none; user-select: none; }
+.svelte-dnd-dragging { opacity: 0.5; cursor: grabbing; }
+.svelte-dnd-draggable:hover { cursor: grab; }
+.svelte-dnd-droppable { position: relative; }
+
+/* Tailored for daisyUI: use semantic color variables for outlines */
+.svelte-dnd-drop-target { outline: 2px dashed var(--color-success, #4caf50); }
+.svelte-dnd-invalid-target { outline: 2px dashed var(--color-error, #f44336); }
+.svelte-dnd-placeholder { border: 2px dashed var(--color-base-content, #9e9e9e); opacity: 0.3; }
+
+/* SvelteDnD drop indicator styles */
+.drop-before,
+.drop-after,
+.drop-left,
+.drop-right {
+	position: relative;
+}
+
+.drop-before::before,
+.drop-after::after,
+.drop-left::before,
+.drop-right::after {
+	content: '';
+	position: absolute;
+	/* Tailored for daisyUI: use primary color for the drop indicator line */
+	background-color: var(--color-primary, #3b82f6);
+	border-radius: 1px;
+	z-index: 10;
+	pointer-events: none;
+}
+
+.drop-before::before,
+.drop-after::after {
+	left: 0;
+	right: 0;
+	height: 2px;
+}
+.drop-before::before { top: -1px; }
+.drop-after::after { bottom: -1px; }
+
+.drop-left::before,
+.drop-right::after {
+	top: 0;
+	bottom: 0;
+	width: 2px;
+}
+.drop-left::before { left: -1px; }
+.drop-right::after { right: -1px; }
