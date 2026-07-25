@@ -2,8 +2,9 @@
 	import pkg from '../../../package.json';
 	import { authStore } from '$lib/stores/auth.svelte';
 	import { dbStore, DEFAULT_DB } from '$lib/stores/db.svelte';
-	import { Save, Trash2, Plus, Cloud, Loader2, ExternalLink, AlertTriangle } from 'lucide-svelte';
-	import { Languages } from '@lucide/svelte';
+	import { Save, Trash2, Plus, Cloud, Loader2, ExternalLink, AlertTriangle, Download, Upload } from 'lucide-svelte';
+	import { DatabaseBackup, Languages } from '@lucide/svelte';
+	import type { Component } from 'svelte';
 
 	let pat = $state(authStore.token);
 	let gistId = $state(authStore.gistId);
@@ -11,6 +12,34 @@
 	let patError = $state(false);
 	let gistError = $state(false);
 	let errorMessage = $state<string | null>(null);
+
+	let confirmModalOpen = $state(false);
+	let confirmTitle = $state('');
+	let confirmMessage = $state('');
+	let confirmAction = $state<() => void>(() => {});
+	let confirmBtnText = $state('Confirm');
+	let confirmBtnClass = $state('btn-primary');
+	let confirmIcon = $state<any>(null);
+
+	function openConfirm(title: string, message: string, action: () => void, btnText: string = 'Confirm', btnClass: string = 'btn-primary', icon: any = null) {
+		confirmTitle = title;
+		confirmMessage = message;
+		confirmAction = action;
+		confirmBtnText = btnText;
+		confirmBtnClass = btnClass;
+		confirmIcon = icon;
+		confirmModalOpen = true;
+	}
+
+	let toasts = $state<{id: number, message: string, type: 'success' | 'error' | 'warning'}[]>([]);
+	let toastId = 0;
+	function showToast(message: string, type: 'success' | 'error' | 'warning' = 'error') {
+		const id = toastId++;
+		toasts.push({ id, message, type });
+		setTimeout(() => {
+			toasts = toasts.filter(t => t.id !== id);
+		}, 3000);
+	}
 
 	async function createNewGist() {
 		if (!pat.trim()) {
@@ -92,13 +121,74 @@
 
 	function removeLanguage(id: string) {
 		if (dbStore.data.settings.languages.length <= 1) {
-			alert('You must have at least one language.');
+			showToast('You must have at least one language.', 'error');
 			return;
 		}
-		if (confirm('Remove this language?')) {
-			dbStore.data.settings.languages = dbStore.data.settings.languages.filter(l => l.id !== id);
-			dbStore.save();
-		}
+		openConfirm(
+			'Remove Language',
+			'Are you sure you want to remove this language? This action cannot be undone.',
+			() => {
+				dbStore.data.settings.languages = dbStore.data.settings.languages.filter(l => l.id !== id);
+				dbStore.save();
+				confirmModalOpen = false;
+				showToast('Language removed.', 'success');
+			},
+			'Delete',
+			'btn-error',
+			Trash2
+		);
+	}
+
+	function downloadBackup() {
+		const dataStr = JSON.stringify(dbStore.data, null, 2);
+		const blob = new Blob([dataStr], { type: 'application/json' });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `copypasta-backup-${new Date().toISOString().slice(0,19).replace(/:/g, '-')}.json`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
+
+	let fileInput: HTMLInputElement;
+
+	function handleRestore(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (!file) return;
+
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			try {
+				const content = e.target?.result as string;
+				const backupData = JSON.parse(content);
+				
+				if (backupData && Array.isArray(backupData.snippets) && Array.isArray(backupData.categories)) {
+					openConfirm(
+						'Restore Backup',
+						'This will completely overwrite your current snippets. Are you sure?',
+						() => {
+							backupData.updatedAt = new Date().toISOString();
+							dbStore.data = backupData;
+							dbStore.save();
+							confirmModalOpen = false;
+							showToast('Backup restored successfully!', 'success');
+						},
+						'Restore',
+						'btn-warning',
+						Upload
+					);
+				} else {
+					showToast('Invalid backup file format.', 'error');
+				}
+			} catch {
+				showToast('Error parsing backup file.', 'error');
+			}
+			target.value = '';
+		};
+		reader.readAsText(file);
 	}
 </script>
 
@@ -281,7 +371,55 @@
 		</div>
 	</section>
 
+	<!-- Backup & Restore -->
+	<section class="card bg-base-100 shadow-sm border border-base-200">
+		<div class="card-body p-6">
+			<h2 class="card-title text-lg flex items-center gap-2 mb-2">
+				<DatabaseBackup class="w-5 h-5" />
+				Backup & Restore
+			</h2>
+			<p class="text-sm text-base-content/70 mb-4">
+				Export your current snippets as a JSON file, or restore a previous backup. Restoring will completely overwrite your current data.
+			</p>
+
+			<div class="flex flex-col sm:flex-row gap-4">
+				<button class="btn btn-outline" onclick={downloadBackup}>
+					<Download class="w-4 h-4" /> Download Backup
+				</button>
+				<button class="btn btn-outline btn-error" onclick={() => fileInput.click()}>
+					<Upload class="w-4 h-4" /> Restore Backup
+				</button>
+				<input type="file" accept=".json,application/json" class="hidden" bind:this={fileInput} onchange={handleRestore} />
+			</div>
+		</div>
+	</section>
+
 	<div class="text-center text-sm text-base-content/50 mt-4 pb-4 font-mono">
 		v{pkg.version}
 	</div>
+</div>
+
+<div class="modal" class:modal-open={confirmModalOpen}>
+	<div class="modal-box">
+		<h3 class="font-bold text-lg flex items-center gap-2">
+			{#if confirmIcon}
+				{@const Icon = confirmIcon}
+				<Icon class="w-5 h-5 text-current" />
+			{/if}
+			{confirmTitle}
+		</h3>
+		<p class="py-4 text-sm opacity-80">{confirmMessage}</p>
+		<div class="modal-action">
+			<button class="btn btn-ghost" onclick={() => confirmModalOpen = false}>Cancel</button>
+			<button class="btn {confirmBtnClass}" onclick={confirmAction}>{confirmBtnText}</button>
+		</div>
+	</div>
+</div>
+
+<div class="toast toast-top toast-center mt-16 sm:toast-bottom sm:toast-end sm:mt-0 z-50">
+	{#each toasts as toast (toast.id)}
+		<div class="alert alert-{toast.type} shadow-lg">
+			<span>{toast.message}</span>
+		</div>
+	{/each}
 </div>
