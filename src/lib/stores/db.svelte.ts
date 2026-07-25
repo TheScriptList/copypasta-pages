@@ -61,6 +61,12 @@ class DbStore {
 	globalLanguageId = $state<string>(
 		(browser && localStorage.getItem('copypasta_local_lang')) || 'en'
 	);
+	fluidWidth = $state<boolean>(
+		(browser && localStorage.getItem('copypasta_local_fluid_width') === 'true')
+	);
+	columnCount = $state<string>(
+		(browser && localStorage.getItem('copypasta_local_column_count')) || '2'
+	);
 	editingSnippetIds = $state<string[]>([]);
 	conflictData = $state<Database | null>(null);
 	isLoading = $state(false);
@@ -73,6 +79,20 @@ class DbStore {
 		this.globalLanguageId = id;
 		if (browser) {
 			localStorage.setItem('copypasta_local_lang', id);
+		}
+	}
+
+	setFluidWidth(fluid: boolean) {
+		this.fluidWidth = fluid;
+		if (browser) {
+			localStorage.setItem('copypasta_local_fluid_width', fluid.toString());
+		}
+	}
+
+	setColumnCount(count: string) {
+		this.columnCount = count;
+		if (browser) {
+			localStorage.setItem('copypasta_local_column_count', count);
 		}
 	}
 

@@ -22,7 +22,7 @@
 <div class="flex min-h-screen flex-col bg-base-200 pb-16 sm:pb-0">
 	<Navbar />
 
-	<main class="mx-auto w-full max-w-7xl flex-1 p-4">
+	<main class={`mx-auto w-full flex-1 p-4 ${dbStore.fluidWidth ? '' : 'max-w-7xl'}`}>
 		{@render children()}
 	</main>
 

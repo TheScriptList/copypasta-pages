@@ -13,7 +13,8 @@
 		Download,
 		Upload,
 		DatabaseBackup,
-		Languages
+		Languages,
+		LayoutGrid
 	} from '@lucide/svelte';
 
 	let pat = $state(authStore.token);
@@ -381,6 +382,44 @@
 					{/if}
 				</div>
 			{/if}
+		</div>
+	</section>
+
+	<!-- UI Layout Settings -->
+	<section class="card border border-base-200 bg-base-100 shadow-sm">
+		<div class="card-body">
+			<h2 class="card-title">
+				<LayoutGrid class="h-5 w-5" />
+				Layout Preferences
+			</h2>
+			<p class="mb-4 text-sm text-base-content/70">
+				Customize how snippets are displayed on the main page. (Stored locally on this device)
+			</p>
+
+			<div class="flex items-center justify-between max-w-xs">
+				<span class="font-medium text-sm">Fluid Width (Full Screen)</span>
+				<input
+					type="checkbox"
+					class="toggle toggle-primary"
+					checked={dbStore.fluidWidth}
+					onchange={(e) => dbStore.setFluidWidth(e.currentTarget.checked)}
+				/>
+			</div>
+
+			<fieldset class="fieldset w-full max-w-xs mt-4">
+				<legend class="fieldset-legend font-medium">Grid Columns</legend>
+				<select
+					class="select select-bordered w-full"
+					value={dbStore.columnCount}
+					onchange={(e) => dbStore.setColumnCount(e.currentTarget.value)}
+				>
+					<option value="1">1 Column</option>
+					<option value="2">2 Columns</option>
+					<option value="3">3 Columns</option>
+					<option value="4">4 Columns</option>
+					<option value="auto">Auto-fit (Responsive)</option>
+				</select>
+			</fieldset>
 		</div>
 	</section>
 

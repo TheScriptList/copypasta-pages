@@ -266,10 +266,16 @@
 		<!-- Snippets Grid -->
 		<div class="flex-1">
 			<div class="mb-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-				<h1 class="text-2xl font-bold">
-					{selectedCategoryId
-						? dbStore.data.categories.find((c) => c.id === selectedCategoryId)?.name
-						: 'All Snippets'}
+				<h1 class="text-2xl font-bold flex items-center">
+					{#if selectedCategoryId}
+						{@const category = dbStore.data.categories.find((c) => c.id === selectedCategoryId)}
+						{#if category?.icon}
+							<span class="mr-2">{category.icon}</span>
+						{/if}
+						{category?.name}
+					{:else}
+						All Snippets
+					{/if}
 				</h1>
 				<div class="flex w-full items-center gap-2 sm:w-auto">
 					<select
@@ -344,7 +350,8 @@
 							{/if}
 
 							<div
-								class={`grid grid-cols-1 gap-4 lg:grid-cols-2 ${isReorderMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
+								class={`grid gap-4 ${isReorderMode ? 'cursor-grab active:cursor-grabbing' : ''} ${dbStore.columnCount === '1' ? 'grid-cols-1' : dbStore.columnCount === '3' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : dbStore.columnCount === '4' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : dbStore.columnCount === 'auto' ? '' : 'grid-cols-1 lg:grid-cols-2'}`}
+								style={dbStore.columnCount === 'auto' ? 'grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));' : ''}
 								use:sortableGroup={group.categoryId}
 							>
 								{#each group.snippets as snippet (snippet.id)}

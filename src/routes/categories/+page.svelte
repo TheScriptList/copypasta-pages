@@ -97,7 +97,7 @@
 	<div class="card border border-base-200 bg-base-100 shadow-sm">
 		<div class="card-body flex-row items-center gap-4 overflow-visible p-4">
 			<div class="dropdown dropdown-bottom">
-				<div tabindex="0" role="button" class="btn w-16 btn-outline text-xl">
+				<div tabindex="0" role="button" class="btn w-16 btn-soft text-xl">
 					{newCategoryEmoji || '😀'}
 				</div>
 				<div
@@ -165,7 +165,7 @@
 
 							<div class="flex flex-1 gap-2 overflow-visible font-medium">
 								<div class="dropdown dropdown-bottom">
-									<div tabindex="0" role="button" class="btn w-12 btn-outline text-lg btn-sm">
+									<div tabindex="0" role="button" class="btn w-12 btn-soft text-lg btn-sm">
 										{category.icon || '😀'}
 									</div>
 									<div
