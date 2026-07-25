@@ -20,10 +20,10 @@
 		"@sveltejs/kit": "^2.63.0",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
 		"@tailwindcss/vite": "^4.3.0",
-		"@types/node": "^24",
+		"@types/node": "^26",
 		"@types/sortablejs": "^1.15.9",
-		"daisyui": "^5.7.0",
-		"eslint": "^10.4.1",
+		"daisyui": "^5.7.4",
+		"eslint": "^10.8.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.19.0",
 		"globals": "^17.6.0",
@@ -31,7 +31,7 @@
 		"prettier-plugin-svelte": "^4.1.0",
 		"prettier-plugin-tailwindcss": "^0.8.0",
 		"sortablejs": "^1.15.7",
-		"svelte": "^5.56.1",
+		"svelte": "^5.56.8",
 		"svelte-check": "^4.6.0",
 		"tailwindcss": "^4.3.0",
 		"typescript": "^6.0.3",
@@ -39,7 +39,7 @@
 		"vite": "^8.0.16"
 	},
 	"dependencies": {
-		"@lucide/svelte": "^1.25.0",
+		"@lucide/svelte": "^1.26.0",
 		"emoji-picker-element": "^1.29.1"
 	}
 }
