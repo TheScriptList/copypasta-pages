@@ -11,7 +11,8 @@
 		Edit2,
 		Trash2,
 		Save,
-		X
+		X,
+		Search
 	} from '@lucide/svelte';
 	import { slide } from 'svelte/transition';
 	import { flip } from 'svelte/animate';
@@ -20,6 +21,7 @@
 	let selectedCategoryId = $state<string | null>(null);
 	let newlyCreatedSnippetId = $state<string | null>(null);
 	let isReorderMode = $state(false);
+	let searchQuery = $state('');
 	let massDeleteModal: HTMLDialogElement;
 
 	function confirmMassDelete() {
@@ -39,10 +41,18 @@
 
 			for (const catId of categoryIds) {
 				const cat = dbStore.data.categories.find((c) => c.id === catId);
-				const snips = dbStore.data.snippets.filter((s) => s.categoryId === catId);
+				let snips = dbStore.data.snippets.filter((s) => s.categoryId === catId);
+				
+				if (searchQuery.trim()) {
+					const query = searchQuery.toLowerCase();
+					snips = snips.filter((s) =>
+						Object.values(s.content).some((val) => val.toLowerCase().includes(query))
+					);
+				}
+
 				if (
 					snips.length > 0 ||
-					(selectedCategoryId === catId && dbStore.data.snippets.length > 0)
+					(!searchQuery.trim() && selectedCategoryId === catId && dbStore.data.snippets.length > 0)
 				) {
 					// We only show empty groups if it's the currently selected category and there are NO snippets at all, which is handled in the template.
 					groups.push({ categoryId: catId, category: cat, snippets: snips });
@@ -50,9 +60,17 @@
 			}
 
 			if (!selectedCategoryId) {
-				const uncategorizedSnippets = dbStore.data.snippets.filter(
+				let uncategorizedSnippets = dbStore.data.snippets.filter(
 					(s) => !dbStore.data.categories.find((c) => c.id === s.categoryId)
 				);
+				
+				if (searchQuery.trim()) {
+					const query = searchQuery.toLowerCase();
+					uncategorizedSnippets = uncategorizedSnippets.filter((s) =>
+						Object.values(s.content).some((val) => val.toLowerCase().includes(query))
+					);
+				}
+
 				if (uncategorizedSnippets.length > 0) {
 					groups.push({
 						categoryId: '',
@@ -180,7 +198,7 @@
 						}}
 					>
 						<button
-							class={!selectedCategoryId ? 'active text-left' : 'text-left'}
+							class={!selectedCategoryId ? 'menu-active text-left' : 'text-left'}
 							onclick={() => (selectedCategoryId = null)}
 						>
 							All Snippets
@@ -196,7 +214,7 @@
 							}}
 						>
 							<button
-								class={`text-left transition-colors ${selectedCategoryId === category.id ? 'active' : ''}`}
+								class={`text-left transition-colors ${selectedCategoryId === category.id ? 'menu-active' : ''}`}
 								onclick={() => (selectedCategoryId = category.id)}
 							>
 								{#if category.icon}
@@ -224,8 +242,18 @@
 						All Snippets
 					{/if}
 				</h1>
-				<div class="flex w-full items-center gap-2 sm:w-auto">
-					<select
+				<div class="flex w-full flex-col gap-3 sm:flex-row sm:w-auto sm:items-center">
+					<label class="input input-sm input-bordered flex items-center gap-2 w-full sm:w-48">
+						<Search class="h-4 w-4 opacity-50" />
+						<input
+							type="text"
+							class="grow"
+							placeholder="Search snippets..."
+							bind:value={searchQuery}
+						/>
+					</label>
+					<div class="flex items-center gap-2 w-full sm:w-auto">
+						<select
 						class="select-bordered select font-bold select-sm"
 						value={dbStore.globalLanguageId}
 						onchange={(e) => dbStore.setGlobalLanguageId(e.currentTarget.value)}
@@ -244,6 +272,7 @@
 					<button class="btn btn-primary btn-sm" onclick={addSnippet}>
 						<Plus class="h-4 w-4" /> Add
 					</button>
+					</div>
 				</div>
 			</div>
 
@@ -281,15 +310,20 @@
 
 			{#if groupedSnippets.length === 0}
 				<div class="rounded-box border border-dashed border-base-200 bg-base-100 py-12 text-center"
+					transition:slide={{ duration: 300 }}
 					use:droppable={{
 						container: selectedCategoryId || '',
 						disabled: !isReorderMode,
 						callbacks: { onDrop: handleDrop }
 					}}>
-					<p class="mb-4 text-base-content/60">No snippets found in this category.</p>
-					<button class="btn btn-outline btn-sm" onclick={addSnippet}>
-						Create First Snippet
-					</button>
+					{#if searchQuery.trim()}
+						<p class="text-base-content/60">No snippets found matching "{searchQuery}".</p>
+					{:else}
+						<p class="mb-4 text-base-content/60">No snippets found in this category.</p>
+						<button class="btn btn-outline btn-sm" onclick={addSnippet}>
+							Create First Snippet
+						</button>
+					{/if}
 				</div>
 			{:else}
 				<div class="flex flex-col gap-6">
