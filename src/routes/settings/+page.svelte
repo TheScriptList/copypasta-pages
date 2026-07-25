@@ -55,7 +55,7 @@
 		}
 	}
 
-	function saveAuth() {
+	async function saveAuth() {
 		let hasError = false;
 		if (!pat.trim()) {
 			patError = true;
@@ -72,7 +72,7 @@
 
 		errorMessage = null;
 		authStore.save(pat, gistId);
-		dbStore.sync(); // Load data from new gist
+		await dbStore.sync();
 	}
 
 	let newLangId = $state('');
