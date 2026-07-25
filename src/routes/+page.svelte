@@ -197,7 +197,7 @@
 	<title>Copypasta - Home</title>
 </svelte:head>
 
-{#if !authStore.isValid}
+{#if !authStore.isValid && !dbStore.data.settings.dismissedSyncWarning}
 	<div class="mb-6 alert alert-warning">
 		<AlertTriangle class="h-5 w-5" />
 		<div>
@@ -207,7 +207,19 @@
 				settings.
 			</div>
 		</div>
-		<a href="{base}/settings" class="btn btn-sm">Configure Sync</a>
+		<div class="flex items-center gap-2">
+			<a href="{base}/settings" class="btn btn-sm">Configure Sync</a>
+			<button
+				class="btn btn-sm btn-square"
+				onclick={() => {
+					dbStore.data.settings.dismissedSyncWarning = true;
+					dbStore.save();
+				}}
+				aria-label="Dismiss"
+			>
+				<X class="h-4 w-4" />
+			</button>
+		</div>
 	</div>
 {/if}
 

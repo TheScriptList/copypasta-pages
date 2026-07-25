@@ -23,6 +23,7 @@ export interface Snippet {
 export interface Database {
 	settings: {
 		languages: Language[];
+		dismissedSyncWarning?: boolean;
 	};
 	categories: Category[];
 	snippets: Snippet[];
