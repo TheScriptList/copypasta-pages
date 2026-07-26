@@ -154,6 +154,7 @@
 
 <div
 	class={`snippet-card card border border-base-200 bg-base-100 shadow-xl ${isReorderMode ? 'shake-animation cursor-grab active:cursor-grabbing' : ''}`}
+	style={isReorderMode ? `animation-delay: -${Math.random() * 0.3}s; animation-duration: ${0.25 + Math.random() * 0.15}s;` : ''}
 	data-id={snippet.id}
 	transition:scale={{ duration: 300, start: 0.9, opacity: 0, easing: backOut }}
 >
