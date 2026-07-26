@@ -220,7 +220,7 @@
 </script>
 
 <svelte:head>
-	<title>Settings - Copypasta</title>
+	<title>Copypasta - Settings</title>
 </svelte:head>
 
 <div class="mx-auto max-w-3xl space-y-8">

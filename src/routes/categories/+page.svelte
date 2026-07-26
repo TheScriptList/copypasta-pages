@@ -82,7 +82,7 @@
 </script>
 
 <svelte:head>
-	<title>Categories - Copypasta</title>
+	<title>Copypasta - Categories</title>
 </svelte:head>
 
 <div class="mx-auto max-w-3xl space-y-6">
