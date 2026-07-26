@@ -23,18 +23,18 @@
 	</div>
 
 	<div class="navbar-center hidden gap-1 sm:flex">
-		<a href="{base}/" class="btn btn-ghost btn-sm {page.url.pathname === '/' ? 'btn-active' : ''}">
+		<a href="{base}/" class="btn btn-ghost btn-sm {page.route.id === '/' ? 'btn-active' : ''}">
 			<Home class="h-4 w-4" /> Home
 		</a>
 		<a
 			href="{base}/categories"
-			class="btn btn-ghost btn-sm {page.url.pathname === '/categories' ? 'btn-active' : ''}"
+			class="btn btn-ghost btn-sm {page.route.id === '/categories' ? 'btn-active' : ''}"
 		>
 			<FolderHeart class="h-4 w-4" /> Categories
 		</a>
 		<a
 			href="{base}/settings"
-			class="btn btn-ghost btn-sm {page.url.pathname === '/settings' ? 'btn-active' : ''}"
+			class="btn btn-ghost btn-sm {page.route.id === '/settings' ? 'btn-active' : ''}"
 		>
 			<Settings class="h-4 w-4" /> Settings
 		</a>
