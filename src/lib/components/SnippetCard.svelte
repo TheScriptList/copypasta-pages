@@ -269,7 +269,7 @@
 							{/each}
 							{#if languagesShowingInMultiple.every((lang) => !snippet.content[lang.id])}
 								<button
-									class="group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
+									class="group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm italic text-base-content/50 break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
 									disabled={true}
 								>
 									Empty snippet
@@ -278,10 +278,10 @@
 						</div>
 					{:else}
 						<button
-							class="group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
+							class={`group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300 ${!activeContent ? 'italic text-base-content/50' : ''}`}
 							onclick={() => handleCopy(activeContent, 'single')}
 							aria-label="Copy snippet"
-							disabled={isReorderMode}
+							disabled={isReorderMode || !activeContent}
 						>
 							{activeContent || 'Empty snippet'}
 							{#if copiedId === 'single'}
