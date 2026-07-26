@@ -537,7 +537,7 @@
 				<button class="btn btn-outline" onclick={downloadBackup}>
 					<Download class="h-4 w-4" /> Download Backup
 				</button>
-				<button class="btn btn-outline btn-error" onclick={() => fileInput.click()}>
+				<button class="btn btn-outline btn-warning" onclick={() => fileInput.click()}>
 					<Upload class="h-4 w-4" /> Restore Backup
 				</button>
 				<input
