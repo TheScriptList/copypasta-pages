@@ -6,12 +6,28 @@
 	import { flip } from 'svelte/animate';
 
 	let newCategoryName = $state('');
-	
-	const CURATED_EMOJIS = ['📁', '📂', '📄', '📝', '⭐', '✨', '🔥', '💡', '📌', '🛠️', '📦', '📚', '🚀', '🎯', '🎨'];
+
+	const CURATED_EMOJIS = [
+		'📁',
+		'📂',
+		'📄',
+		'📝',
+		'⭐',
+		'✨',
+		'🔥',
+		'💡',
+		'📌',
+		'🛠️',
+		'📦',
+		'📚',
+		'🚀',
+		'🎯',
+		'🎨'
+	];
 	function getRandomEmoji() {
 		return CURATED_EMOJIS[Math.floor(Math.random() * CURATED_EMOJIS.length)];
 	}
-	
+
 	let newCategoryEmoji = $state(getRandomEmoji());
 
 	onMount(() => {
@@ -28,10 +44,10 @@
 		};
 	}
 
-	function handleDrop(state: DragDropState<typeof dbStore.data.categories[0]>) {
+	function handleDrop(state: DragDropState<(typeof dbStore.data.categories)[0]>) {
 		const { draggedItem, targetContainer, dropPosition } = state;
 		if (!targetContainer) return;
-		
+
 		const dragIndex = dbStore.data.categories.findIndex((c) => c.id === draggedItem.id);
 		let dropIndex = parseInt(targetContainer ?? '0');
 		if (dropPosition === 'after') dropIndex++;
@@ -140,10 +156,16 @@
 			{:else}
 				<ul class="divide-y divide-base-200">
 					{#each dbStore.data.categories as category, index (category.id)}
-						{@const snippetCount = dbStore.data.snippets.filter((s) => s.categoryId === category.id).length}
+						{@const snippetCount = dbStore.data.snippets.filter(
+							(s) => s.categoryId === category.id
+						).length}
 						<li
 							animate:flip={{ duration: 300 }}
-							use:draggable={{ container: index.toString(), dragData: category, handle: '.drag-handle' }}
+							use:draggable={{
+								container: index.toString(),
+								dragData: category,
+								handle: '.drag-handle'
+							}}
 							use:droppable={{ container: index.toString(), callbacks: { onDrop: handleDrop } }}
 							class="flex items-center gap-4 bg-base-100 p-4 transition-colors hover:bg-base-200/50"
 						>
@@ -201,7 +223,8 @@
 							</div>
 
 							<div class="badge badge-soft badge-sm whitespace-nowrap">
-								{snippetCount} {snippetCount === 1 ? 'snippet' : 'snippets'}
+								{snippetCount}
+								{snippetCount === 1 ? 'snippet' : 'snippets'}
 							</div>
 
 							<button
@@ -224,7 +247,9 @@
 			<Trash2 class="h-5 w-5" /> Delete Category?
 		</h3>
 		<p class="py-2">Are you sure you want to delete this category? This action cannot be undone.</p>
-		<p class="text-sm text-base-content/60">All snippets in this category will be moved to Uncategorized.</p>
+		<p class="text-sm text-base-content/60">
+			All snippets in this category will be moved to Uncategorized.
+		</p>
 		<div class="modal-action">
 			<form method="dialog">
 				<button class="btn" onclick={() => (categoryToDeleteId = null)}>Cancel</button>

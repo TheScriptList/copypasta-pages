@@ -42,7 +42,7 @@
 			for (const catId of categoryIds) {
 				const cat = dbStore.data.categories.find((c) => c.id === catId);
 				let snips = dbStore.data.snippets.filter((s) => s.categoryId === catId);
-				
+
 				if (searchQuery.trim()) {
 					const query = searchQuery.toLowerCase();
 					snips = snips.filter((s) =>
@@ -63,7 +63,7 @@
 				let uncategorizedSnippets = dbStore.data.snippets.filter(
 					(s) => !dbStore.data.categories.find((c) => c.id === s.categoryId)
 				);
-				
+
 				if (searchQuery.trim()) {
 					const query = searchQuery.toLowerCase();
 					uncategorizedSnippets = uncategorizedSnippets.filter((s) =>
@@ -99,14 +99,14 @@
 		dbStore.save();
 	}
 
-	function handleDrop(state: DragDropState<typeof dbStore.data.snippets[0]>) {
+	function handleDrop(state: DragDropState<(typeof dbStore.data.snippets)[0]>) {
 		const { draggedItem, targetContainer, dropPosition } = state;
 		if (!targetContainer) return;
 
 		const splitIndex = targetContainer.lastIndexOf(':');
 		let targetCategoryId = targetContainer;
 		let dropIndex = -1;
-		
+
 		if (splitIndex !== -1) {
 			targetCategoryId = targetContainer.substring(0, splitIndex);
 			dropIndex = parseInt(targetContainer.substring(splitIndex + 1));
@@ -165,7 +165,7 @@
 		<div class="flex items-center gap-2">
 			<a href="{base}/settings" class="btn btn-sm">Configure Sync</a>
 			<button
-				class="btn btn-sm btn-square"
+				class="btn btn-square btn-sm"
 				onclick={() => {
 					dbStore.data.settings.dismissedSyncWarning = true;
 					dbStore.save();
@@ -194,7 +194,10 @@
 							container: '',
 							disabled: !isReorderMode,
 							callbacks: { onDrop: handleDrop },
-							attributes: { dragOverClass: 'bg-primary/20 outline-2 outline-offset-[-2px] outline-primary/50 outline-dashed rounded-box' }
+							attributes: {
+								dragOverClass:
+									'bg-primary/20 outline-2 outline-offset-[-2px] outline-primary/50 outline-dashed rounded-box'
+							}
 						}}
 					>
 						<button
@@ -210,7 +213,10 @@
 								container: category.id,
 								disabled: !isReorderMode,
 								callbacks: { onDrop: handleDrop },
-								attributes: { dragOverClass: 'bg-primary/20 outline-2 outline-offset-[-2px] outline-primary/50 outline-dashed rounded-box' }
+								attributes: {
+									dragOverClass:
+										'bg-primary/20 outline-2 outline-offset-[-2px] outline-primary/50 outline-dashed rounded-box'
+								}
 							}}
 						>
 							<button
@@ -229,7 +235,7 @@
 		<!-- Snippets Grid -->
 		<div class="flex-1">
 			<div class="mb-4 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-				<h1 class="text-2xl font-bold flex items-center">
+				<h1 class="flex items-center text-2xl font-bold">
 					{#if selectedCategoryId}
 						{@const category = dbStore.data.categories.find((c) => c.id === selectedCategoryId)}
 						<span class="mr-2">{category?.icon || '📁'}</span>
@@ -238,8 +244,8 @@
 						All Snippets
 					{/if}
 				</h1>
-				<div class="flex w-full flex-col gap-3 sm:flex-row sm:w-auto sm:items-center">
-					<label class="input input-sm input-bordered flex items-center gap-2 w-full sm:w-48">
+				<div class="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+					<label class="input-bordered input flex w-full items-center gap-2 input-sm sm:w-48">
 						<Search class="h-4 w-4 opacity-50" />
 						<input
 							type="text"
@@ -248,26 +254,26 @@
 							bind:value={searchQuery}
 						/>
 					</label>
-					<div class="flex items-center gap-2 w-full sm:w-auto">
+					<div class="flex w-full items-center gap-2 sm:w-auto">
 						<select
-						class="select-bordered select font-bold select-sm"
-						value={dbStore.globalLanguageId}
-						onchange={(e) => dbStore.setGlobalLanguageId(e.currentTarget.value)}
-					>
-						<option value="multiple">Multiple</option>
-						{#each dbStore.data.settings.languages as lang (lang.id)}
-							<option value={lang.id}>{lang.name}</option>
-						{/each}
-					</select>
-					<button
-						class={`btn btn-sm ${isReorderMode ? 'btn-secondary' : 'border border-base-300 btn-ghost'}`}
-						onclick={() => (isReorderMode = !isReorderMode)}
-					>
-						<ArrowUpDown class="h-4 w-4" /> Reorder
-					</button>
-					<button class="btn btn-primary btn-sm" onclick={addSnippet}>
-						<Plus class="h-4 w-4" /> Add
-					</button>
+							class="select-bordered select font-bold select-sm"
+							value={dbStore.globalLanguageId}
+							onchange={(e) => dbStore.setGlobalLanguageId(e.currentTarget.value)}
+						>
+							<option value="multiple">Multiple</option>
+							{#each dbStore.data.settings.languages as lang (lang.id)}
+								<option value={lang.id}>{lang.name}</option>
+							{/each}
+						</select>
+						<button
+							class={`btn btn-sm ${isReorderMode ? 'btn-secondary' : 'border border-base-300 btn-ghost'}`}
+							onclick={() => (isReorderMode = !isReorderMode)}
+						>
+							<ArrowUpDown class="h-4 w-4" /> Reorder
+						</button>
+						<button class="btn btn-primary btn-sm" onclick={addSnippet}>
+							<Plus class="h-4 w-4" /> Add
+						</button>
 					</div>
 				</div>
 			</div>
@@ -305,13 +311,15 @@
 			{/if}
 
 			{#if groupedSnippets.length === 0}
-				<div class="rounded-box border border-dashed border-base-200 bg-base-100 py-12 text-center"
+				<div
+					class="rounded-box border border-dashed border-base-200 bg-base-100 py-12 text-center"
 					transition:slide={{ duration: 300 }}
 					use:droppable={{
 						container: selectedCategoryId || '',
 						disabled: !isReorderMode,
 						callbacks: { onDrop: handleDrop }
-					}}>
+					}}
+				>
 					{#if searchQuery.trim()}
 						<p class="text-base-content/60">No snippets found matching "{searchQuery}".</p>
 					{:else}
@@ -334,7 +342,9 @@
 
 							<div
 								class={`grid gap-4 ${dbStore.columnCount === '1' ? 'grid-cols-1' : dbStore.columnCount === '3' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : dbStore.columnCount === '4' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-4' : dbStore.columnCount === 'auto' ? '' : 'grid-cols-1 lg:grid-cols-2'}`}
-								style={dbStore.columnCount === 'auto' ? 'grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));' : ''}
+								style={dbStore.columnCount === 'auto'
+									? 'grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));'
+									: ''}
 							>
 								{#each group.snippets as snippet, index (snippet.id)}
 									<div
@@ -344,7 +354,9 @@
 											container: group.categoryId + ':' + index,
 											dragData: snippet,
 											disabled: !isReorderMode,
-											attributes: { draggingClass: 'opacity-50 scale-105 transition-transform duration-200 z-50' }
+											attributes: {
+												draggingClass: 'opacity-50 scale-105 transition-transform duration-200 z-50'
+											}
 										}}
 										use:droppable={{
 											container: group.categoryId + ':' + index,

@@ -237,7 +237,9 @@
 							{#each languagesShowingInMultiple as lang (lang.id)}
 								{#if snippet.content[lang.id]}
 									<div
-										class="flex flex-col gap-1 {dbStore.data.settings.hideLanguageTitles ? 'tooltip tooltip-top hover:before:delay-1000 hover:after:delay-1000 before:z-50' : ''}"
+										class="flex flex-col gap-1 {dbStore.data.settings.hideLanguageTitles
+											? 'tooltip tooltip-top before:z-50 hover:before:delay-1000 hover:after:delay-1000'
+											: ''}"
 										data-tip={dbStore.data.settings.hideLanguageTitles ? lang.name : null}
 									>
 										{#if !dbStore.data.settings.hideLanguageTitles}
@@ -257,7 +259,12 @@
 												>
 													<div
 														class="flex items-center gap-2 rounded-full bg-success px-3 py-1 font-sans font-bold text-success-content shadow-sm"
-														transition:scale={{ duration: 300, start: 0.8, opacity: 0, easing: backOut }}
+														transition:scale={{
+															duration: 300,
+															start: 0.8,
+															opacity: 0,
+															easing: backOut
+														}}
 													>
 														<Check class="h-4 w-4" /> Copied
 													</div>
@@ -269,7 +276,7 @@
 							{/each}
 							{#if languagesShowingInMultiple.every((lang) => !snippet.content[lang.id])}
 								<button
-									class="group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm italic text-base-content/50 break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
+									class="group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap text-base-content/50 italic transition-colors hover:bg-base-300"
 									disabled={true}
 								>
 									Empty snippet
@@ -278,7 +285,7 @@
 						</div>
 					{:else}
 						<button
-							class={`group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300 ${!activeContent ? 'italic text-base-content/50' : ''}`}
+							class={`group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300 ${!activeContent ? 'text-base-content/50 italic' : ''}`}
 							onclick={() => handleCopy(activeContent, 'single')}
 							aria-label="Copy snippet"
 							disabled={isReorderMode || !activeContent}

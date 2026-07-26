@@ -397,8 +397,8 @@
 				Customize how snippets are displayed on the main page. (Stored locally on this device)
 			</p>
 
-			<div class="flex items-center justify-between max-w-xs">
-				<span class="font-medium text-sm">Fluid Width (Full Screen)</span>
+			<div class="flex max-w-xs items-center justify-between">
+				<span class="text-sm font-medium">Fluid Width (Full Screen)</span>
 				<input
 					type="checkbox"
 					class="toggle toggle-primary"
@@ -407,10 +407,10 @@
 				/>
 			</div>
 
-			<fieldset class="fieldset w-full max-w-xs mt-4">
+			<fieldset class="mt-4 fieldset w-full max-w-xs">
 				<legend class="fieldset-legend font-medium">Grid Columns</legend>
 				<select
-					class="select select-bordered w-full"
+					class="select-bordered select w-full"
 					value={dbStore.columnCount}
 					onchange={(e) => dbStore.setColumnCount(e.currentTarget.value)}
 				>
@@ -435,8 +435,8 @@
 				Configure the languages for your dual-mode or multi-mode snippets.
 			</p>
 
-			<div class="mb-4 flex items-center justify-between max-w-sm">
-				<span class="font-medium text-sm">Hide Language Titles in Multiple View</span>
+			<div class="mb-4 flex max-w-sm items-center justify-between">
+				<span class="text-sm font-medium">Hide Language Titles in Multiple View</span>
 				<input
 					type="checkbox"
 					class="toggle toggle-primary"

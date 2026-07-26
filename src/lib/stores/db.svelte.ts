@@ -73,7 +73,7 @@ class DbStore {
 		(browser && localStorage.getItem('copypasta_local_lang')) || 'en'
 	);
 	fluidWidth = $state<boolean>(
-		(browser && localStorage.getItem('copypasta_local_fluid_width') === 'true')
+		browser && localStorage.getItem('copypasta_local_fluid_width') === 'true'
 	);
 	columnCount = $state<string>(
 		(browser && localStorage.getItem('copypasta_local_column_count')) || '2'
