@@ -217,9 +217,7 @@
 								class={`text-left transition-colors ${selectedCategoryId === category.id ? 'menu-active' : ''}`}
 								onclick={() => (selectedCategoryId = category.id)}
 							>
-								{#if category.icon}
-									<span class="mr-1">{category.icon}</span>
-								{/if}
+								<span class="mr-1">{category.icon || '📁'}</span>
 								{category.name}
 							</button>
 						</li>
@@ -234,9 +232,7 @@
 				<h1 class="text-2xl font-bold flex items-center">
 					{#if selectedCategoryId}
 						{@const category = dbStore.data.categories.find((c) => c.id === selectedCategoryId)}
-						{#if category?.icon}
-							<span class="mr-2">{category.icon}</span>
-						{/if}
+						<span class="mr-2">{category?.icon || '📁'}</span>
 						{category?.name}
 					{:else}
 						All Snippets
@@ -331,7 +327,7 @@
 						<div>
 							{#if !selectedCategoryId}
 								<div class="divider text-sm font-bold text-base-content/50">
-									{group.category?.icon || ''}
+									{group.category?.icon || '📁'}
 									{group.category?.name || 'Unknown'}
 								</div>
 							{/if}

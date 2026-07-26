@@ -6,7 +6,13 @@
 	import { flip } from 'svelte/animate';
 
 	let newCategoryName = $state('');
-	let newCategoryEmoji = $state('');
+	
+	const CURATED_EMOJIS = ['📁', '📂', '📄', '📝', '⭐', '✨', '🔥', '💡', '📌', '🛠️', '📦', '📚', '🚀', '🎯', '🎨'];
+	function getRandomEmoji() {
+		return CURATED_EMOJIS[Math.floor(Math.random() * CURATED_EMOJIS.length)];
+	}
+	
+	let newCategoryEmoji = $state(getRandomEmoji());
 
 	onMount(() => {
 		import('emoji-picker-element');
@@ -60,7 +66,7 @@
 			});
 			dbStore.save();
 			newCategoryName = '';
-			newCategoryEmoji = '';
+			newCategoryEmoji = getRandomEmoji();
 		}
 	}
 
@@ -95,7 +101,7 @@
 		<div class="card-body flex-row items-center gap-4 overflow-visible p-4">
 			<div class="dropdown dropdown-bottom">
 				<div tabindex="0" role="button" class="btn w-16 btn-soft text-xl">
-					{newCategoryEmoji || '😀'}
+					{newCategoryEmoji}
 				</div>
 				<div
 					tabindex="-1"
@@ -167,7 +173,7 @@
 							<div class="flex flex-1 gap-2 overflow-visible font-medium">
 								<div class="dropdown dropdown-bottom">
 									<div tabindex="0" role="button" class="btn w-12 btn-soft text-lg btn-sm">
-										{category.icon || '😀'}
+										{category.icon || '📁'}
 									</div>
 									<div
 										tabindex="-1"
