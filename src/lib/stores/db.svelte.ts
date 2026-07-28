@@ -1,6 +1,8 @@
 import { browser } from '$app/environment';
 import { authStore } from './auth.svelte';
-
+import { GithubProvider } from './providers/github';
+import { GDriveProvider } from './providers/gdrive';
+import type { StorageAdapter } from './providers/types';
 export interface Language {
 	id: string;
 	name: string;
@@ -120,6 +122,12 @@ class DbStore {
 		}
 	}
 
+	private getAdapter(): StorageAdapter | null {
+		if (authStore.activeProvider === 'github') return new GithubProvider();
+		if (authStore.activeProvider === 'gdrive') return new GDriveProvider();
+		return null;
+	}
+
 	async sync() {
 		if (!authStore.isValid) {
 			this.syncStatus = 'Offline/No Auth';
@@ -130,54 +138,32 @@ class DbStore {
 			return;
 		}
 
+		const adapter = this.getAdapter();
+		if (!adapter) {
+			this.syncStatus = 'Local Only';
+			return;
+		}
+
 		this.isLoading = true;
 		this.syncStatus = 'Syncing...';
 		this.error = null;
+		
 		try {
-			const res = await fetch(`https://api.github.com/gists/${authStore.gistId}`, {
-				headers: {
-					Authorization: `Bearer ${authStore.token}`,
-					Accept: 'application/vnd.github.v3+json'
-				}
-			});
-			if (!res.ok) throw new Error('Failed to fetch gist');
-			const gist = await res.json();
-			const file = gist.files['copypasta.json'];
-			if (file && file.content) {
-				const remoteData = JSON.parse(file.content) as Database;
-				if (remoteData?.settings?.languages) {
-					remoteData.settings.languages.forEach((l: Language) => {
-						if (l.showInMultiple === undefined) {
-							l.showInMultiple = l.id === 'en' || l.id === 'de';
-						}
-					});
-				}
-				const localDate = new Date(this.data.updatedAt || 0).getTime();
-				const remoteDate = new Date(remoteData.updatedAt || 0).getTime();
-				const lastSynced = this.getLastSyncedAt();
-
-				if (!remoteData.updatedAt) {
-					await this._pushToGist();
-				} else {
-					const isRemoteNewer = remoteDate > lastSynced;
-					const isLocalNewer = localDate > lastSynced;
-
-					if (isRemoteNewer && isLocalNewer && localDate !== remoteDate) {
-						this.conflictData = remoteData;
-						this.syncStatus = 'Error';
-						this.isLoading = false;
-						return;
-					} else if (isRemoteNewer) {
-						this.forcePull(remoteData);
-					} else if (isLocalNewer) {
-						await this._pushToGist();
-					} else {
-						this.syncStatus = 'Synced';
-					}
-				}
+			const result = await adapter.sync(this.data, this.getLastSyncedAt());
+			
+			if (result.action === 'error') {
+				this.error = result.error || 'Unknown sync error';
+				this.syncStatus = 'Error';
+			} else if (result.action === 'conflict') {
+				this.conflictData = result.remoteData || null;
+				this.syncStatus = 'Error';
+			} else if (result.action === 'pulled' && result.remoteData) {
+				this.forcePull(result.remoteData);
+			} else if (result.action === 'pushed') {
+				this.setLastSyncedAt(result.remoteDate || new Date(this.data.updatedAt).getTime());
+				this.syncStatus = 'Synced';
 			} else {
-				// Initialize gist if empty
-				await this._pushToGist();
+				this.syncStatus = 'Synced';
 			}
 		} catch (err) {
 			const e = err as Error;
@@ -206,13 +192,13 @@ class DbStore {
 
 		this._saveTimeout = setTimeout(() => {
 			this._saveTimeout = null;
-			this._pushToGist();
+			this._pushToRemote();
 		}, 1000);
 	}
 
 	async forcePush() {
 		this.conflictData = null;
-		await this._pushToGist();
+		await this._pushToRemote();
 	}
 
 	forcePull(remoteData: Database) {
@@ -230,7 +216,7 @@ class DbStore {
 		this.syncStatus = 'Synced';
 	}
 
-	private async _pushToGist() {
+	private async _pushToRemote() {
 		if (!authStore.isValid) {
 			this.syncStatus = 'Local Only';
 			return;
@@ -240,27 +226,19 @@ class DbStore {
 			return;
 		}
 
+		const adapter = this.getAdapter();
+		if (!adapter) {
+			this.syncStatus = 'Local Only';
+			return;
+		}
+
 		this.isLoading = true;
 		this.syncStatus = 'Syncing...';
 		this.error = null;
+		
 		try {
-			const res = await fetch(`https://api.github.com/gists/${authStore.gistId}`, {
-				method: 'PATCH',
-				headers: {
-					Authorization: `Bearer ${authStore.token}`,
-					Accept: 'application/vnd.github.v3+json',
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					files: {
-						'copypasta.json': {
-							content: JSON.stringify(this.data, null, 2)
-						}
-					}
-				})
-			});
-			if (!res.ok) throw new Error('Failed to update gist');
-			this.setLastSyncedAt(new Date(this.data.updatedAt).getTime());
+			const result = await adapter.push(this.data);
+			this.setLastSyncedAt(result.remoteDate);
 			this.syncStatus = 'Synced';
 		} catch (err) {
 			const e = err as Error;
