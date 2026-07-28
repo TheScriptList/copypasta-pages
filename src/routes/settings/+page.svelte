@@ -407,6 +407,19 @@
 				/>
 			</div>
 
+			<div class="mt-4 flex max-w-xs items-center justify-between">
+				<span class="text-sm font-medium">Slim Mode (Desktop Only)</span>
+				<input
+					type="checkbox"
+					class="toggle toggle-primary"
+					checked={dbStore.data.settings.slimMode}
+					onchange={(e) => {
+						dbStore.data.settings.slimMode = e.currentTarget.checked;
+						dbStore.save();
+					}}
+				/>
+			</div>
+
 			<fieldset class="mt-4 fieldset w-full max-w-xs">
 				<legend class="fieldset-legend font-medium">Grid Columns</legend>
 				<select

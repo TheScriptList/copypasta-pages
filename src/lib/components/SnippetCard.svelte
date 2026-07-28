@@ -28,6 +28,7 @@
 	let languagesShowingInMultiple = $derived(
 		dbStore.data.settings.languages.filter((l) => l.showInMultiple)
 	);
+	let isSlim = $derived(!!dbStore.data.settings.slimMode);
 
 	import { onMount, onDestroy, untrack } from 'svelte';
 
@@ -153,70 +154,84 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <div
-	class={`snippet-card card border border-base-200 bg-base-100 shadow-xl ${isReorderMode ? 'shake-animation cursor-grab active:cursor-grabbing' : ''}`}
+	class={`snippet-card group card border border-base-200 bg-base-100 shadow-xl ${isReorderMode ? 'shake-animation cursor-grab active:cursor-grabbing' : ''} ${isSlim ? 'md:overflow-hidden' : ''}`}
 	style={isReorderMode ? `animation-delay: -${Math.random() * 0.3}s; animation-duration: ${0.25 + Math.random() * 0.15}s;` : ''}
 	data-id={snippet.id}
 	transition:scale={{ duration: 300, start: 0.9, opacity: 0, easing: backOut }}
 >
-	<div class="pointer-events-none card-body p-4">
+	<div class={`pointer-events-none card-body p-4 ${isSlim ? 'md:p-2' : ''}`}>
 		<div
-			class={`flex items-start justify-between ${isReorderMode ? 'opacity-50' : 'pointer-events-auto'}`}
+			class={`flex items-start justify-between ${isReorderMode ? 'opacity-50' : 'pointer-events-auto'} ${isSlim ? 'md:absolute md:top-0 md:left-0 md:right-0 md:z-10 md:transition-all md:duration-200 md:bg-linear-to-b md:from-base-100/95 md:to-transparent md:p-2 md:pb-6 md:pointer-events-none' : ''} ${isSlim && !isEditing ? `md:-translate-y-full md:opacity-0 ${!isReorderMode ? 'md:group-hover:translate-y-0 md:group-hover:opacity-100' : ''}` : ''} ${isSlim && isEditing ? 'md:translate-y-0 md:opacity-100' : ''}`}
 		>
-			<div class="flex flex-col gap-1">
+			<div class="pointer-events-auto flex flex-col gap-1">
 				<div
 					class="tooltip tooltip-bottom tooltip-right"
 					data-tip={new Date(snippet.updatedAt).toLocaleString()}
 				>
-					<div class="mt-1 flex w-max cursor-help items-center gap-1 text-xs text-base-content/50">
+					<div class={`${isSlim ? 'md:mt-0' : 'mt-1'} flex w-max cursor-help items-center gap-1 text-xs text-base-content/50`}>
 						<Clock class="h-3 w-3" />
 						Updated {getRelativeTime(snippet.updatedAt)}
 					</div>
 				</div>
 			</div>
 
-			{#if isEditing}
-				<div class="flex gap-1">
-					<button
-						class="btn btn-circle btn-ghost text-error btn-sm"
-						onclick={openDeleteModal}
-						title="Delete"
+			<div class="relative flex h-8 min-w-26 shrink-0 items-center justify-end">
+				{#if isEditing}
+					<div
+						class="pointer-events-auto absolute right-0 flex gap-1"
+						in:fade={{ duration: 150 }}
+						out:fade={{ duration: 150 }}
 					>
-						<Trash2 class="h-4 w-4" />
-					</button>
+						<button
+							class="btn btn-circle btn-ghost text-error btn-sm"
+							onclick={openDeleteModal}
+							title="Delete"
+						>
+							<Trash2 class="h-4 w-4" />
+						</button>
+						<button
+							class="btn btn-circle btn-ghost text-base-content/50 btn-sm"
+							onclick={cancelEdit}
+							title="Cancel"
+						>
+							<X class="h-4 w-4" />
+						</button>
+						<button
+							class="btn btn-circle btn-ghost text-success btn-sm"
+							onclick={saveEdit}
+							title="Save"
+						>
+							<Save class="h-4 w-4" />
+						</button>
+					</div>
+				{:else}
 					<button
-						class="btn btn-circle btn-ghost text-base-content/50 btn-sm"
-						onclick={cancelEdit}
-						title="Cancel"
+						class="pointer-events-auto absolute right-0 btn btn-circle btn-ghost btn-sm"
+						in:fade={{ duration: 150 }}
+						out:fade={{ duration: 150 }}
+						onclick={startEdit}
+						title="Edit snippet"
+						disabled={isReorderMode}
 					>
-						<X class="h-4 w-4" />
+						<Edit2 class="h-4 w-4" />
 					</button>
-					<button
-						class="btn btn-circle btn-ghost text-success btn-sm"
-						onclick={saveEdit}
-						title="Save"
-					>
-						<Save class="h-4 w-4" />
-					</button>
-				</div>
-			{:else}
-				<button
-					class="btn btn-circle btn-ghost btn-sm"
-					onclick={startEdit}
-					title="Edit snippet"
-					disabled={isReorderMode}
-				>
-					<Edit2 class="h-4 w-4" />
-				</button>
-			{/if}
+				{/if}
+			</div>
 		</div>
 
 		<div class={isReorderMode ? 'pointer-events-none' : 'pointer-events-auto'}>
+			{#if isSlim && isEditing}
+				<div class="hidden md:block" transition:slide={{ duration: 250 }}>
+					<div class="h-10"></div>
+				</div>
+			{/if}
 			{#if isEditing}
-				<div
-					class="flex flex-col gap-4"
-					in:slide={{ duration: 250, delay: 250 }}
-					out:slide={{ duration: 250 }}
-				>
+				<div transition:slide={{ duration: 250 }}>
+					<div
+						class="flex flex-col gap-4"
+						in:fade={{ duration: 200, delay: 50 }}
+						out:fade={{ duration: 150 }}
+					>
 					{#each dbStore.data.settings.languages as lang (lang.id)}
 						<div>
 							<label class="label pt-0 pb-1" for="content-{snippet.id}-{lang.id}"
@@ -230,10 +245,12 @@
 								placeholder="Enter {lang.name} snippet..."></textarea>
 						</div>
 					{/each}
+					</div>
 				</div>
 			{:else}
-				<div in:slide={{ duration: 250, delay: 250 }} out:slide={{ duration: 250 }}>
-					{#if dbStore.globalLanguageId === 'multiple'}
+				<div transition:slide={{ duration: 250 }}>
+					<div in:fade={{ duration: 200, delay: 50 }} out:fade={{ duration: 150 }}>
+						{#if dbStore.globalLanguageId === 'multiple'}
 						<div class="flex flex-col gap-3">
 							{#each languagesShowingInMultiple as lang (lang.id)}
 								{#if snippet.content[lang.id]}
@@ -247,7 +264,7 @@
 											<span class="px-1 text-xs font-bold opacity-60">{lang.name}</span>
 										{/if}
 										<button
-											class="group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300"
+											class="group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm wrap-break-word whitespace-pre-wrap transition-colors hover:bg-base-300"
 											onclick={() => handleCopy(snippet.content[lang.id], lang.id)}
 											aria-label="Copy snippet for {lang.name}"
 											disabled={isReorderMode}
@@ -276,17 +293,16 @@
 								{/if}
 							{/each}
 							{#if languagesShowingInMultiple.every((lang) => !snippet.content[lang.id])}
-								<button
-									class="group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap text-base-content/50 italic transition-colors hover:bg-base-300"
-									disabled={true}
+								<div
+									class="relative block min-h-12 w-full rounded-lg bg-base-200 p-3 text-left font-mono text-sm wrap-break-word whitespace-pre-wrap text-base-content/50 italic transition-colors"
 								>
 									Empty snippet
-								</button>
+								</div>
 							{/if}
 						</div>
 					{:else}
 						<button
-							class={`group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm break-words whitespace-pre-wrap transition-colors hover:bg-base-300 ${!activeContent ? 'text-base-content/50 italic' : ''}`}
+							class={`group relative block min-h-12 w-full rounded-lg bg-base-200 p-3 text-left font-mono text-sm wrap-break-word whitespace-pre-wrap transition-colors ${!activeContent ? 'cursor-default text-base-content/50 italic' : 'cursor-pointer hover:bg-base-300'}`}
 							onclick={() => handleCopy(activeContent, 'single')}
 							aria-label="Copy snippet"
 							disabled={isReorderMode || !activeContent}
@@ -308,6 +324,7 @@
 						</button>
 					{/if}
 				</div>
+			</div>
 			{/if}
 		</div>
 	</div>

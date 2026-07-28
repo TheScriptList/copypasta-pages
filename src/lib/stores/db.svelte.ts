@@ -26,6 +26,7 @@ export interface Database {
 		languages: Language[];
 		dismissedSyncWarning?: boolean;
 		hideLanguageTitles?: boolean;
+		slimMode?: boolean;
 	};
 	categories: Category[];
 	snippets: Snippet[];
@@ -38,7 +39,8 @@ export const DEFAULT_DB: Database = {
 			{ id: 'en', name: 'English', showInMultiple: true },
 			{ id: 'de', name: 'German', showInMultiple: true }
 		],
-		hideLanguageTitles: false
+		hideLanguageTitles: false,
+		slimMode: false
 	},
 	categories: [],
 	snippets: [],
