@@ -12,6 +12,7 @@
 		FolderHeart,
 		Settings
 	} from '@lucide/svelte';
+	import { scale, fade } from 'svelte/transition';
 </script>
 
 <div class="navbar sticky top-0 z-50 border-b border-base-200 bg-base-100 px-4 shadow-sm">
@@ -49,7 +50,7 @@
 				: ''}
 		>
 			<div
-				class="mr-2 badge sm:mr-4 {dbStore.syncStatus === 'Synced'
+				class="mr-2 badge sm:mr-4 inline-grid place-items-center transition-colors duration-300 {dbStore.syncStatus === 'Synced'
 					? 'badge-outline badge-success'
 					: dbStore.syncStatus === 'Syncing...'
 						? 'badge-outline badge-info'
@@ -57,16 +58,20 @@
 							? 'badge-outline badge-error'
 							: 'badge-ghost'}"
 			>
-				{#if dbStore.syncStatus === 'Synced'}
-					<Cloud class="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
-				{:else if dbStore.syncStatus === 'Syncing...'}
-					<CloudCog class="mr-1 h-3 w-3 animate-pulse sm:h-4 sm:w-4" />
-				{:else if dbStore.syncStatus === 'Error'}
-					<AlertCircle class="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
-				{:else}
-					<CloudOff class="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
-				{/if}
-				<span class="hidden sm:inline">{dbStore.syncStatus}</span>
+				{#key dbStore.syncStatus}
+					<div class="col-start-1 row-start-1 flex items-center justify-center" in:scale={{ duration: 300, start: 0.8, delay: 150 }} out:fade={{ duration: 150 }}>
+						{#if dbStore.syncStatus === 'Synced'}
+							<Cloud class="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+						{:else if dbStore.syncStatus === 'Syncing...'}
+							<CloudCog class="mr-1 h-3 w-3 animate-pulse sm:h-4 sm:w-4" />
+						{:else if dbStore.syncStatus === 'Error'}
+							<AlertCircle class="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+						{:else}
+							<CloudOff class="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+						{/if}
+						<span class="hidden sm:inline">{dbStore.syncStatus}</span>
+					</div>
+				{/key}
 			</div>
 		</div>
 		<div class="sm:tooltip sm:tooltip-bottom" data-tip="GitHub">

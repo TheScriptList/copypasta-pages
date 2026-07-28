@@ -16,6 +16,7 @@
 		Languages,
 		LayoutGrid
 	} from '@lucide/svelte';
+	import { scale, fade } from 'svelte/transition';
 
 	let pat = $state(authStore.github.token);
 	let gistId = $state(authStore.github.gistId);
@@ -386,22 +387,22 @@
 			<div role="tablist" class="tabs tabs-box mb-4">
 				<button 
 					role="tab" 
-					class="tab {activeTab === 'github' ? 'tab-active' : ''}" 
+					class="tab transition-all duration-300 {activeTab === 'github' ? 'tab-active' : ''}" 
 					onclick={() => { activeTab = 'github'; errorMessage = null; }}
 				>
 					GitHub Gist
 					{#if authStore.activeProvider === 'github'}
-						<div class="badge badge-primary badge-sm ml-2">Active</div>
+						<div class="badge badge-primary badge-sm ml-2" in:scale={{duration: 200, start: 0.8}} out:scale={{duration: 200, start: 0.8}}>Active</div>
 					{/if}
 				</button>
 				<button 
 					role="tab" 
-					class="tab {activeTab === 'gdrive' ? 'tab-active' : ''}" 
+					class="tab transition-all duration-300 {activeTab === 'gdrive' ? 'tab-active' : ''}" 
 					onclick={() => { activeTab = 'gdrive'; errorMessage = null; }}
 				>
 					Google Drive
 					{#if authStore.activeProvider === 'gdrive'}
-						<div class="badge badge-primary badge-sm ml-2">Active</div>
+						<div class="badge badge-primary badge-sm ml-2" in:scale={{duration: 200, start: 0.8}} out:scale={{duration: 200, start: 0.8}}>Active</div>
 					{/if}
 				</button>
 			</div>
@@ -493,11 +494,15 @@
 							<div class="flex items-center gap-2">
 								<button 
 									type="button" 
-									class="btn {authStore.activeProvider === 'github' ? 'btn-disabled' : 'btn-outline btn-accent'}" 
+									class="btn grid place-items-center transition-all duration-300 {authStore.activeProvider === 'github' ? 'btn-disabled' : 'btn-outline btn-accent'}" 
 									onclick={() => setActiveProvider('github')}
 									disabled={authStore.activeProvider === 'github'}
 								>
-									{authStore.activeProvider === 'github' ? 'Currently Active' : 'Set as Active Sync Provider'}
+									{#key authStore.activeProvider}
+										<span class="col-start-1 row-start-1" in:scale={{duration:250, delay: 100, start: 0.95}} out:fade={{duration:150}}>
+											{authStore.activeProvider === 'github' ? 'Currently Active' : 'Set as Active Sync Provider'}
+										</span>
+									{/key}
 								</button>
 								<button type="submit" class="btn btn-primary">
 									<Save class="h-4 w-4" /> Save
@@ -581,11 +586,15 @@
 							<div class="flex items-center gap-2">
 								<button 
 									type="button" 
-									class="btn {authStore.activeProvider === 'gdrive' ? 'btn-disabled' : 'btn-outline btn-accent'}" 
+									class="btn grid place-items-center transition-all duration-300 {authStore.activeProvider === 'gdrive' ? 'btn-disabled' : 'btn-outline btn-accent'}" 
 									onclick={() => setActiveProvider('gdrive')}
 									disabled={authStore.activeProvider === 'gdrive'}
 								>
-									{authStore.activeProvider === 'gdrive' ? 'Currently Active' : 'Set as Active Sync Provider'}
+									{#key authStore.activeProvider}
+										<span class="col-start-1 row-start-1" in:scale={{duration:250, delay: 100, start: 0.95}} out:fade={{duration:150}}>
+											{authStore.activeProvider === 'gdrive' ? 'Currently Active' : 'Set as Active Sync Provider'}
+										</span>
+									{/key}
 								</button>
 								<button type="submit" class="btn btn-primary">
 									<Save class="h-4 w-4" /> Save
