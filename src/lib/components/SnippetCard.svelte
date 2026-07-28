@@ -24,10 +24,18 @@
 	let editContents = $state<Record<string, string>>(startInEditMode ? { ...snippet.content } : {});
 	let deleteModal: HTMLDialogElement;
 
-	let activeContent = $derived(snippet.content[dbStore.globalLanguageId] || '');
+
 	let languagesShowingInMultiple = $derived(
 		dbStore.data.settings.languages.filter((l) => l.showInMultiple)
 	);
+	let isMultipleMode = $derived(dbStore.globalLanguageId === 'multiple');
+	let displayedLanguages = $derived.by(() => {
+		if (isMultipleMode) {
+			return languagesShowingInMultiple;
+		}
+		const lang = dbStore.data.settings.languages.find((l) => l.id === dbStore.globalLanguageId);
+		return lang ? [lang] : [];
+	});
 	let isSlim = $derived(!!dbStore.data.settings.slimMode);
 
 	import { onMount, onDestroy, untrack } from 'svelte';
@@ -249,27 +257,31 @@
 				</div>
 			{:else}
 				<div transition:slide={{ duration: 250 }}>
-					<div in:fade={{ duration: 200, delay: 50 }} out:fade={{ duration: 150 }}>
-						{#if dbStore.globalLanguageId === 'multiple'}
-						<div class="flex flex-col gap-3">
-							{#each languagesShowingInMultiple as lang (lang.id)}
-								{#if snippet.content[lang.id]}
-									<div
-										class="flex flex-col gap-1 {dbStore.data.settings.hideLanguageTitles
-											? 'tooltip tooltip-top before:z-50 hover:before:delay-1000 hover:after:delay-1000'
-											: ''}"
-										data-tip={dbStore.data.settings.hideLanguageTitles ? lang.name : null}
-									>
-										{#if !dbStore.data.settings.hideLanguageTitles}
-											<span class="px-1 text-xs font-bold opacity-60">{lang.name}</span>
-										{/if}
+					<div
+						class="flex flex-col gap-3"
+						in:fade={{ duration: 200, delay: 50 }}
+						out:fade={{ duration: 150 }}
+					>
+						{#each displayedLanguages as lang (lang.id)}
+							{@const content = snippet.content[lang.id]}
+							{#if content || !isMultipleMode}
+								<div
+									class="flex flex-col gap-1 {isMultipleMode && dbStore.data.settings.hideLanguageTitles
+										? 'tooltip tooltip-top before:z-50 hover:before:delay-1000 hover:after:delay-1000'
+										: ''}"
+									data-tip={isMultipleMode && dbStore.data.settings.hideLanguageTitles ? lang.name : null}
+								>
+									{#if isMultipleMode && !dbStore.data.settings.hideLanguageTitles}
+										<span class="px-1 text-xs font-bold opacity-60">{lang.name}</span>
+									{/if}
+									{#if content}
 										<button
 											class="group relative block min-h-12 w-full cursor-pointer rounded-lg bg-base-200 p-3 text-left font-mono text-sm wrap-break-word whitespace-pre-wrap transition-colors hover:bg-base-300"
-											onclick={() => handleCopy(snippet.content[lang.id], lang.id)}
-											aria-label="Copy snippet for {lang.name}"
+											onclick={() => handleCopy(content, lang.id)}
+											aria-label="Copy snippet"
 											disabled={isReorderMode}
 										>
-											{snippet.content[lang.id]}
+											{content}
 											{#if copiedId === lang.id}
 												<div
 													class="absolute inset-0 flex items-center justify-center rounded-lg bg-success/20 backdrop-blur-sm"
@@ -277,54 +289,34 @@
 												>
 													<div
 														class="flex items-center gap-2 rounded-full bg-success px-3 py-1 font-sans font-bold text-success-content shadow-sm"
-														transition:scale={{
-															duration: 300,
-															start: 0.8,
-															opacity: 0,
-															easing: backOut
-														}}
+														transition:scale={{ duration: 300, start: 0.8, opacity: 0, easing: backOut }}
 													>
 														<Check class="h-4 w-4" /> Copied
 													</div>
 												</div>
 											{/if}
 										</button>
-									</div>
-								{/if}
-							{/each}
-							{#if languagesShowingInMultiple.every((lang) => !snippet.content[lang.id])}
-								<div
-									class="relative block min-h-12 w-full rounded-lg bg-base-200 p-3 text-left font-mono text-sm wrap-break-word whitespace-pre-wrap text-base-content/50 italic transition-colors"
-								>
-									Empty snippet
+									{:else}
+										<button
+											class="relative block min-h-12 w-full cursor-default select-none rounded-lg bg-base-200 p-3 text-left font-mono text-sm wrap-break-word whitespace-pre-wrap text-base-content/50 italic transition-colors"
+											disabled={true}
+										>
+											Empty snippet
+										</button>
+									{/if}
 								</div>
 							{/if}
-						</div>
-					{:else}
-						<button
-							class={`group relative block min-h-12 w-full rounded-lg bg-base-200 p-3 text-left font-mono text-sm wrap-break-word whitespace-pre-wrap transition-colors ${!activeContent ? 'cursor-default text-base-content/50 italic' : 'cursor-pointer hover:bg-base-300'}`}
-							onclick={() => handleCopy(activeContent, 'single')}
-							aria-label="Copy snippet"
-							disabled={isReorderMode || !activeContent}
-						>
-							{activeContent || 'Empty snippet'}
-							{#if copiedId === 'single'}
-								<div
-									class="absolute inset-0 flex items-center justify-center rounded-lg bg-success/20 backdrop-blur-sm"
-									transition:fade={{ duration: 150 }}
-								>
-									<div
-										class="flex items-center gap-2 rounded-full bg-success px-3 py-1 font-sans font-bold text-success-content shadow-sm"
-										transition:scale={{ duration: 300, start: 0.8, opacity: 0, easing: backOut }}
-									>
-										<Check class="h-4 w-4" /> Copied
-									</div>
-								</div>
-							{/if}
-						</button>
-					{/if}
+						{/each}
+						{#if isMultipleMode && displayedLanguages.every((lang) => !snippet.content[lang.id])}
+							<button
+								class="relative block min-h-12 w-full cursor-default select-none rounded-lg bg-base-200 p-3 text-left font-mono text-sm wrap-break-word whitespace-pre-wrap text-base-content/50 italic transition-colors"
+								disabled={true}
+							>
+								Empty snippet
+							</button>
+						{/if}
+					</div>
 				</div>
-			</div>
 			{/if}
 		</div>
 	</div>
