@@ -86,9 +86,9 @@ class DbStore {
 	conflictData = $state<Database | null>(null);
 	isLoading = $state(false);
 	error = $state<string | null>(null);
-	syncStatus = $state<'Offline/No Auth' | 'Syncing...' | 'Synced' | 'Error' | 'Local Only'>(
-		authStore.isValid ? 'Syncing...' : 'Local Only'
-	);
+	syncStatus = $state<
+		'Offline/No Auth' | 'Unsaved' | 'Syncing...' | 'Synced' | 'Error' | 'Local Only'
+	>(authStore.isValid ? 'Syncing...' : 'Local Only');
 
 	setGlobalLanguageId(id: string) {
 		this.globalLanguageId = id;
@@ -147,10 +147,10 @@ class DbStore {
 		this.isLoading = true;
 		this.syncStatus = 'Syncing...';
 		this.error = null;
-		
+
 		try {
 			const result = await adapter.sync(this.data, this.getLastSyncedAt());
-			
+
 			if (result.action === 'error') {
 				this.error = result.error || 'Unknown sync error';
 				this.syncStatus = 'Error';
@@ -190,10 +190,17 @@ class DbStore {
 			clearTimeout(this._saveTimeout);
 		}
 
+		let syncDelay = parseInt(import.meta.env.VITE_SYNC_DELAY_MS || '3000', 10);
+		if (isNaN(syncDelay)) syncDelay = 3000;
+
+		if (authStore.isValid) {
+			this.syncStatus = 'Unsaved';
+		}
+
 		this._saveTimeout = setTimeout(() => {
 			this._saveTimeout = null;
 			this._pushToRemote();
-		}, 1000);
+		}, syncDelay);
 	}
 
 	async forcePush() {
@@ -203,7 +210,7 @@ class DbStore {
 
 	forcePull(remoteData: Database) {
 		if (remoteData?.settings?.languages) {
-			remoteData.settings.languages.forEach((l: any) => {
+			remoteData.settings.languages.forEach((l: Language) => {
 				if (l.showInMultiple === undefined) {
 					l.showInMultiple = l.id === 'en' || l.id === 'de';
 				}
@@ -235,7 +242,7 @@ class DbStore {
 		this.isLoading = true;
 		this.syncStatus = 'Syncing...';
 		this.error = null;
-		
+
 		try {
 			const result = await adapter.push(this.data);
 			this.setLastSyncedAt(result.remoteDate);

@@ -24,7 +24,6 @@
 	let editContents = $state<Record<string, string>>(startInEditMode ? { ...snippet.content } : {});
 	let deleteModal: HTMLDialogElement;
 
-
 	let languagesShowingInMultiple = $derived(
 		dbStore.data.settings.languages.filter((l) => l.showInMultiple)
 	);
@@ -163,20 +162,24 @@
 
 <div
 	class={`snippet-card group card border border-base-200 bg-base-100 shadow-xl ${isReorderMode ? 'shake-animation cursor-grab active:cursor-grabbing' : ''} ${isSlim ? 'md:overflow-hidden' : ''}`}
-	style={isReorderMode ? `animation-delay: -${Math.random() * 0.3}s; animation-duration: ${0.25 + Math.random() * 0.15}s;` : ''}
+	style={isReorderMode
+		? `animation-delay: -${Math.random() * 0.3}s; animation-duration: ${0.25 + Math.random() * 0.15}s;`
+		: ''}
 	data-id={snippet.id}
 	transition:scale={{ duration: 300, start: 0.9, opacity: 0, easing: backOut }}
 >
 	<div class={`pointer-events-none card-body p-4 ${isSlim ? 'md:p-2' : ''}`}>
 		<div
-			class={`flex items-start justify-between ${isReorderMode ? 'opacity-50' : 'pointer-events-auto'} ${isSlim ? 'md:absolute md:top-0 md:left-0 md:right-0 md:z-10 md:transition-all md:duration-200 md:bg-linear-to-b md:from-base-100/95 md:to-transparent md:p-2 md:pb-6 md:pointer-events-none' : ''} ${isSlim && !isEditing ? `md:-translate-y-full md:opacity-0 ${!isReorderMode ? 'md:group-hover:translate-y-0 md:group-hover:opacity-100' : ''}` : ''} ${isSlim && isEditing ? 'md:translate-y-0 md:opacity-100' : ''}`}
+			class={`flex items-start justify-between ${isReorderMode ? 'opacity-50' : 'pointer-events-auto'} ${isSlim ? 'md:pointer-events-none md:absolute md:top-0 md:right-0 md:left-0 md:z-10 md:bg-linear-to-b md:from-base-100/95 md:to-transparent md:p-2 md:pb-6 md:transition-all md:duration-200' : ''} ${isSlim && !isEditing ? `md:-translate-y-full md:opacity-0 ${!isReorderMode ? 'md:group-hover:translate-y-0 md:group-hover:opacity-100' : ''}` : ''} ${isSlim && isEditing ? 'md:translate-y-0 md:opacity-100' : ''}`}
 		>
 			<div class="pointer-events-auto flex flex-col gap-1">
 				<div
 					class="tooltip tooltip-bottom tooltip-right"
 					data-tip={new Date(snippet.updatedAt).toLocaleString()}
 				>
-					<div class={`${isSlim ? 'md:mt-0' : 'mt-1'} flex w-max cursor-help items-center gap-1 text-xs text-base-content/50`}>
+					<div
+						class={`${isSlim ? 'md:mt-0' : 'mt-1'} flex w-max cursor-help items-center gap-1 text-xs text-base-content/50`}
+					>
 						<Clock class="h-3 w-3" />
 						Updated {getRelativeTime(snippet.updatedAt)}
 					</div>
@@ -214,7 +217,7 @@
 					</div>
 				{:else}
 					<button
-						class="pointer-events-auto absolute right-0 btn btn-circle btn-ghost btn-sm"
+						class="btn pointer-events-auto absolute right-0 btn-circle btn-ghost btn-sm"
 						in:fade={{ duration: 150 }}
 						out:fade={{ duration: 150 }}
 						onclick={startEdit}
@@ -240,19 +243,19 @@
 						in:fade={{ duration: 200, delay: 50 }}
 						out:fade={{ duration: 150 }}
 					>
-					{#each dbStore.data.settings.languages as lang (lang.id)}
-						<div>
-							<label class="label pt-0 pb-1" for="content-{snippet.id}-{lang.id}"
-								><span class="label-text text-xs font-bold">{lang.name} Content</span></label
-							>
-							<textarea
-								id="content-{snippet.id}-{lang.id}"
-								class="textarea-bordered textarea w-full font-mono text-sm leading-relaxed"
-								rows="3"
-								bind:value={editContents[lang.id]}
-								placeholder="Enter {lang.name} snippet..."></textarea>
-						</div>
-					{/each}
+						{#each dbStore.data.settings.languages as lang (lang.id)}
+							<div>
+								<label class="label pt-0 pb-1" for="content-{snippet.id}-{lang.id}"
+									><span class="label-text text-xs font-bold">{lang.name} Content</span></label
+								>
+								<textarea
+									id="content-{snippet.id}-{lang.id}"
+									class="textarea-bordered textarea w-full font-mono text-sm leading-relaxed"
+									rows="3"
+									bind:value={editContents[lang.id]}
+									placeholder="Enter {lang.name} snippet..."></textarea>
+							</div>
+						{/each}
 					</div>
 				</div>
 			{:else}
@@ -266,10 +269,13 @@
 							{@const content = snippet.content[lang.id]}
 							{#if content || !isMultipleMode}
 								<div
-									class="flex flex-col gap-1 {isMultipleMode && dbStore.data.settings.hideLanguageTitles
+									class="flex flex-col gap-1 {isMultipleMode &&
+									dbStore.data.settings.hideLanguageTitles
 										? 'tooltip tooltip-top before:z-50 hover:before:delay-1000 hover:after:delay-1000'
 										: ''}"
-									data-tip={isMultipleMode && dbStore.data.settings.hideLanguageTitles ? lang.name : null}
+									data-tip={isMultipleMode && dbStore.data.settings.hideLanguageTitles
+										? lang.name
+										: null}
 								>
 									{#if isMultipleMode && !dbStore.data.settings.hideLanguageTitles}
 										<span class="px-1 text-xs font-bold opacity-60">{lang.name}</span>
@@ -289,7 +295,12 @@
 												>
 													<div
 														class="flex items-center gap-2 rounded-full bg-success px-3 py-1 font-sans font-bold text-success-content shadow-sm"
-														transition:scale={{ duration: 300, start: 0.8, opacity: 0, easing: backOut }}
+														transition:scale={{
+															duration: 300,
+															start: 0.8,
+															opacity: 0,
+															easing: backOut
+														}}
 													>
 														<Check class="h-4 w-4" /> Copied
 													</div>
@@ -298,7 +309,7 @@
 										</button>
 									{:else}
 										<button
-											class="relative block min-h-12 w-full cursor-default select-none rounded-lg bg-base-200 p-3 text-left font-mono text-sm wrap-break-word whitespace-pre-wrap text-base-content/50 italic transition-colors"
+											class="relative block min-h-12 w-full cursor-default rounded-lg bg-base-200 p-3 text-left font-mono text-sm wrap-break-word whitespace-pre-wrap text-base-content/50 italic transition-colors select-none"
 											disabled={true}
 										>
 											Empty snippet
@@ -309,7 +320,7 @@
 						{/each}
 						{#if isMultipleMode && displayedLanguages.every((lang) => !snippet.content[lang.id])}
 							<button
-								class="relative block min-h-12 w-full cursor-default select-none rounded-lg bg-base-200 p-3 text-left font-mono text-sm wrap-break-word whitespace-pre-wrap text-base-content/50 italic transition-colors"
+								class="relative block min-h-12 w-full cursor-default rounded-lg bg-base-200 p-3 text-left font-mono text-sm wrap-break-word whitespace-pre-wrap text-base-content/50 italic transition-colors select-none"
 								disabled={true}
 							>
 								Empty snippet

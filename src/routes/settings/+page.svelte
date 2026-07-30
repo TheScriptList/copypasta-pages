@@ -10,6 +10,7 @@
 		Loader2,
 		ExternalLink,
 		AlertTriangle,
+		Clock,
 		Download,
 		Upload,
 		DatabaseBackup,
@@ -30,24 +31,48 @@
 
 	const HAS_GLOBAL_CLIENT_ID = !!import.meta.env.VITE_GOOGLE_CLIENT_ID;
 	let showCustomClientId = $state(
-		!HAS_GLOBAL_CLIENT_ID || 
-		(authStore.gdrive.clientId && authStore.gdrive.clientId !== import.meta.env.VITE_GOOGLE_CLIENT_ID)
+		!HAS_GLOBAL_CLIENT_ID ||
+			(authStore.gdrive.clientId &&
+				authStore.gdrive.clientId !== import.meta.env.VITE_GOOGLE_CLIENT_ID)
 	);
 
-	let activeTab = $state<'github' | 'gdrive'>(authStore.activeProvider === 'gdrive' ? 'gdrive' : 'github');
+	let activeTab = $state<'github' | 'gdrive'>(
+		authStore.activeProvider === 'gdrive' ? 'gdrive' : 'github'
+	);
 
 	let gisTokenClient: any = null; // eslint-disable-line @typescript-eslint/no-explicit-any
 
 	let appDataModalOpen = $state(false);
-	let gdriveFiles = $state<{id: string, name: string}[] | null>(null);
+	let gdriveFiles = $state<
+		| { id: string; name: string; size?: string; createdTime?: string; modifiedTime?: string }[]
+		| null
+	>(null);
 	let isLoadingGdriveFiles = $state(false);
+
+	function formatSize(bytes?: string) {
+		if (!bytes) return 'Unknown size';
+		const b = parseInt(bytes, 10);
+		if (isNaN(b)) return 'Unknown size';
+		if (b < 1024) return `${b} B`;
+		if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+		return `${(b / (1024 * 1024)).toFixed(1)} MB`;
+	}
+
+	function formatDate(dateStr?: string) {
+		if (!dateStr) return 'Unknown date';
+		return new Date(dateStr).toLocaleDateString(undefined, {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric'
+		});
+	}
 
 	async function loadGdriveFiles() {
 		if (!authStore.gdrive.accessToken) return;
 		isLoadingGdriveFiles = true;
 		try {
 			const res = await fetch(
-				`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name)`,
+				`https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&fields=files(id,name,size,createdTime,modifiedTime)`,
 				{
 					headers: {
 						Authorization: `Bearer ${authStore.gdrive.accessToken}`
@@ -66,7 +91,7 @@
 
 	async function deleteGdriveFile(id: string) {
 		if (!authStore.gdrive.accessToken) return;
-		
+
 		openConfirm(
 			'Delete File',
 			'Are you sure you want to permanently delete this file from your Google Drive App Data? This will break sync if it is the active database file.',
@@ -80,10 +105,10 @@
 						}
 					});
 					if (!res.ok) throw new Error('Failed to delete file');
-					
+
 					showToast('File deleted successfully', 'success');
 					if (gdriveFiles) {
-						gdriveFiles = gdriveFiles.filter(f => f.id !== id);
+						gdriveFiles = gdriveFiles.filter((f) => f.id !== id);
 					}
 					if (authStore.gdrive.fileId === id) {
 						authStore.gdrive.fileId = '';
@@ -106,7 +131,7 @@
 			gisTokenClient = google.accounts.oauth2.initTokenClient({
 				client_id: gdriveClientId,
 				scope: 'https://www.googleapis.com/auth/drive.appdata',
-				callback: (tokenResponse: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+				callback: (tokenResponse: { access_token?: string }) => {
 					if (tokenResponse && tokenResponse.access_token) {
 						authStore.gdrive.accessToken = tokenResponse.access_token;
 						authStore.gdrive.clientId = gdriveClientId;
@@ -125,7 +150,7 @@
 			return;
 		}
 		errorMessage = null;
-		
+
 		authStore.gdrive.clientId = gdriveClientId;
 		authStore.save();
 
@@ -138,7 +163,7 @@
 		if (!gisTokenClient) {
 			initGis();
 		}
-		
+
 		if (gisTokenClient) {
 			gisTokenClient.requestAccessToken();
 		}
@@ -239,12 +264,12 @@
 				errorMessage = 'Please provide both a PAT and a Gist ID to save your sync settings.';
 				return;
 			}
-			
+
 			errorMessage = null;
 			authStore.github.token = pat.trim();
 			authStore.github.gistId = gistId.trim();
 			authStore.save();
-			
+
 			if (authStore.activeProvider === 'github') {
 				await dbStore.sync();
 			} else {
@@ -384,25 +409,39 @@
 				Choose a provider to sync your snippets securely across devices.
 			</p>
 
-			<div role="tablist" class="tabs tabs-box mb-4">
-				<button 
-					role="tab" 
-					class="tab indicator {activeTab === 'github' ? 'tab-active' : ''}" 
-					onclick={() => { activeTab = 'github'; errorMessage = null; }}
+			<div role="tablist" class="tabs-box mb-4 tabs">
+				<button
+					role="tab"
+					class="tab indicator {activeTab === 'github' ? 'tab-active' : ''}"
+					onclick={() => {
+						activeTab = 'github';
+						errorMessage = null;
+					}}
 				>
 					GitHub Gist
 					{#if authStore.activeProvider === 'github'}
-						<span class="indicator-item indicator-top indicator-center badge badge-primary badge-xs" in:scale={{duration: 200, start: 0.8}} out:scale={{duration: 200, start: 0.8}}>Active</span>
+						<span
+							class="indicator-item badge badge-xs indicator-center indicator-top badge-primary"
+							in:scale={{ duration: 200, start: 0.8 }}
+							out:scale={{ duration: 200, start: 0.8 }}>Active</span
+						>
 					{/if}
 				</button>
-				<button 
-					role="tab" 
-					class="tab indicator {activeTab === 'gdrive' ? 'tab-active' : ''}" 
-					onclick={() => { activeTab = 'gdrive'; errorMessage = null; }}
+				<button
+					role="tab"
+					class="tab indicator {activeTab === 'gdrive' ? 'tab-active' : ''}"
+					onclick={() => {
+						activeTab = 'gdrive';
+						errorMessage = null;
+					}}
 				>
 					Google Drive
 					{#if authStore.activeProvider === 'gdrive'}
-						<span class="indicator-item indicator-top indicator-center badge badge-primary badge-xs" in:scale={{duration: 200, start: 0.8}} out:scale={{duration: 200, start: 0.8}}>Active</span>
+						<span
+							class="indicator-item badge badge-xs indicator-center indicator-top badge-primary"
+							in:scale={{ duration: 200, start: 0.8 }}
+							out:scale={{ duration: 200, start: 0.8 }}>Active</span
+						>
 					{/if}
 				</button>
 			</div>
@@ -445,7 +484,7 @@
 							<p class="label text-base-content/60">Needs the "gist" scope.</p>
 						</fieldset>
 
-						<fieldset class="fieldset w-full mt-2">
+						<fieldset class="mt-2 fieldset w-full">
 							<legend class="fieldset-legend font-medium">Gist ID</legend>
 							<input
 								id="gist"
@@ -490,15 +529,17 @@
 									{/if}
 								</button>
 							</div>
-							
+
 							<div class="flex items-center gap-2">
-								<button 
+								<button
 									type="button"
 									class="btn btn-outline btn-accent"
 									onclick={() => setActiveProvider('github')}
 									disabled={authStore.activeProvider === 'github'}
 								>
-									{authStore.activeProvider === 'github' ? 'Currently Active' : 'Set as Active Sync Provider'}
+									{authStore.activeProvider === 'github'
+										? 'Currently Active'
+										: 'Set as Active Sync Provider'}
 								</button>
 								<button type="submit" class="btn btn-primary">
 									<Save class="h-4 w-4" /> Save
@@ -510,7 +551,8 @@
 			{:else if activeTab === 'gdrive'}
 				<div>
 					<p class="mb-4 text-sm text-base-content/70">
-						Your data will be stored securely in a hidden folder on your Google Drive that only this app can access (App Data Folder).
+						Your data will be stored securely in a hidden folder on your Google Drive that only this
+						app can access (App Data Folder).
 					</p>
 
 					<form
@@ -522,17 +564,22 @@
 						{#if HAS_GLOBAL_CLIENT_ID}
 							<div class="form-control mb-4">
 								<label class="label cursor-pointer justify-start gap-3">
-									<input type="checkbox" class="checkbox" bind:checked={showCustomClientId} onchange={(e) => {
-										if (!e.currentTarget.checked) {
-											gdriveClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-											gdriveClientIdError = false;
-											errorMessage = null;
-										} else {
-											if (gdriveClientId === import.meta.env.VITE_GOOGLE_CLIENT_ID) {
-												gdriveClientId = '';
+									<input
+										type="checkbox"
+										class="checkbox"
+										bind:checked={showCustomClientId}
+										onchange={(e) => {
+											if (!e.currentTarget.checked) {
+												gdriveClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+												gdriveClientIdError = false;
+												errorMessage = null;
+											} else {
+												if (gdriveClientId === import.meta.env.VITE_GOOGLE_CLIENT_ID) {
+													gdriveClientId = '';
+												}
 											}
-										}
-									}} />
+										}}
+									/>
 									<span class="label-text">Use custom Google Client ID (for self-hosting)</span>
 								</label>
 							</div>
@@ -568,11 +615,7 @@
 							class="mt-6 card-actions flex-wrap items-center justify-between border-t border-base-200 pt-4"
 						>
 							<div>
-								<button
-									type="button"
-									class="btn btn-secondary"
-									onclick={loginGdrive}
-								>
+								<button type="button" class="btn btn-secondary" onclick={loginGdrive}>
 									Sign in with Google
 								</button>
 								{#if authStore.gdrive.accessToken}
@@ -580,13 +623,15 @@
 								{/if}
 							</div>
 							<div class="flex items-center gap-2">
-								<button 
+								<button
 									type="button"
 									class="btn btn-outline btn-accent"
 									onclick={() => setActiveProvider('gdrive')}
 									disabled={authStore.activeProvider === 'gdrive'}
 								>
-									{authStore.activeProvider === 'gdrive' ? 'Currently Active' : 'Set as Active Sync Provider'}
+									{authStore.activeProvider === 'gdrive'
+										? 'Currently Active'
+										: 'Set as Active Sync Provider'}
 								</button>
 								<button type="submit" class="btn btn-primary">
 									<Save class="h-4 w-4" /> Save
@@ -610,6 +655,8 @@
 								<div class="badge gap-1 badge-success"><Cloud class="h-3 w-3" /> Synced</div>
 							{:else if dbStore.syncStatus === 'Error'}
 								<div class="badge gap-1 badge-error"><Cloud class="h-3 w-3" /> Error</div>
+							{:else if dbStore.syncStatus === 'Unsaved'}
+								<div class="badge gap-1 badge-warning"><Clock class="h-3 w-3" /> Unsaved</div>
 							{:else if dbStore.syncStatus === 'Syncing...'}
 								<div class="badge gap-1 badge-info">
 									<Loader2 class="h-3 w-3 animate-spin" /> Syncing
@@ -662,10 +709,13 @@
 					{#if authStore.activeProvider === 'gdrive' && authStore.gdrive.accessToken}
 						<div class="flex items-center justify-between">
 							<span class="font-medium">App Data:</span>
-							<button 
+							<button
 								type="button"
-								class="link link-primary border-none bg-transparent p-0 font-normal hover:bg-transparent"
-								onclick={() => { appDataModalOpen = true; loadGdriveFiles(); }}
+								class="link border-none bg-transparent p-0 font-normal link-primary hover:bg-transparent"
+								onclick={() => {
+									appDataModalOpen = true;
+									loadGdriveFiles();
+								}}
 							>
 								Manage Files
 							</button>
@@ -861,32 +911,43 @@
 
 <dialog class="modal" class:modal-open={appDataModalOpen}>
 	<div class="modal-box">
-		<h3 class="font-bold text-lg mb-4">App Data Management</h3>
-		<p class="text-sm text-base-content/70 mb-4">
-			View and permanently delete files stored in the hidden App Data folder for this application on your Google Drive.
+		<h3 class="mb-4 text-lg font-bold">App Data Management</h3>
+		<p class="mb-4 text-sm text-base-content/70">
+			View and permanently delete files stored in the hidden App Data folder for this application on
+			your Google Drive.
 		</p>
-		
-		<div class="flex flex-col gap-2 min-h-32 mb-6">
+
+		<div class="mb-6 flex min-h-32 flex-col gap-2">
 			{#if isLoadingGdriveFiles}
-				<div class="flex items-center justify-center h-full text-base-content/50">
+				<div class="flex h-full items-center justify-center text-base-content/50">
 					<Loader2 class="h-6 w-6 animate-spin" />
 					<span class="ml-2">Loading files...</span>
 				</div>
 			{:else if gdriveFiles !== null}
 				{#if gdriveFiles.length === 0}
-					<div class="flex items-center justify-center h-full text-base-content/50 italic">
+					<div class="flex h-full items-center justify-center text-base-content/50 italic">
 						No files found in App Data.
 					</div>
 				{:else}
-					<ul class="menu bg-base-200 w-full rounded-box">
+					<ul class="menu w-full rounded-box bg-base-200">
 						{#each gdriveFiles as file (file.id)}
 							<li>
-								<div class="flex justify-between items-center w-full hover:bg-base-300">
-									<div class="flex flex-col gap-0.5 pointer-events-none">
-										<span class="font-medium text-sm leading-tight">{file.name}</span>
-										<span class="text-xs text-base-content/50 font-mono leading-tight">{file.id}</span>
+								<div class="flex w-full items-center justify-between hover:bg-base-300">
+									<div class="pointer-events-none flex flex-col gap-0.5">
+										<span class="text-sm leading-tight font-medium">{file.name}</span>
+										<span class="font-mono text-xs leading-tight text-base-content/50"
+											>{file.id}</span
+										>
+										<span class="text-xs leading-tight text-base-content/40">
+											{formatSize(file.size)} &bull; Created: {formatDate(file.createdTime)} &bull; Modified:
+											{formatDate(file.modifiedTime)}
+										</span>
 									</div>
-									<button type="button" class="btn btn-ghost btn-sm text-error btn-square z-10" onclick={() => deleteGdriveFile(file.id)}>
+									<button
+										type="button"
+										class="btn z-10 btn-square btn-ghost text-error btn-sm"
+										onclick={() => deleteGdriveFile(file.id)}
+									>
 										<Trash2 class="h-4 w-4" />
 									</button>
 								</div>
@@ -896,12 +957,12 @@
 				{/if}
 			{/if}
 		</div>
-		
+
 		<div class="modal-action">
-			<button type="button" class="btn" onclick={() => appDataModalOpen = false}>Close</button>
+			<button type="button" class="btn" onclick={() => (appDataModalOpen = false)}>Close</button>
 		</div>
 	</div>
-	<form method="dialog" class="modal-backdrop" onsubmit={() => appDataModalOpen = false}>
+	<form method="dialog" class="modal-backdrop" onsubmit={() => (appDataModalOpen = false)}>
 		<button>close</button>
 	</form>
 </dialog>
@@ -917,8 +978,12 @@
 		</h3>
 		<p class="py-4 text-sm opacity-80">{confirmMessage}</p>
 		<div class="modal-action">
-			<button type="button" class="btn btn-ghost" onclick={() => (confirmModalOpen = false)}>Cancel</button>
-			<button type="button" class="btn {confirmBtnClass}" onclick={confirmAction}>{confirmBtnText}</button>
+			<button type="button" class="btn btn-ghost" onclick={() => (confirmModalOpen = false)}
+				>Cancel</button
+			>
+			<button type="button" class="btn {confirmBtnClass}" onclick={confirmAction}
+				>{confirmBtnText}</button
+			>
 		</div>
 	</div>
 </dialog>

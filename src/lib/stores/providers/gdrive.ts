@@ -1,4 +1,4 @@
-import type { Database } from '../db.svelte';
+import type { Database, Language } from '../db.svelte';
 import type { StorageAdapter, SyncResult } from './types';
 import { authStore } from '../auth.svelte';
 
@@ -54,7 +54,7 @@ export class GDriveProvider implements StorageAdapter {
 
 				// Migration for older data formats
 				if (remoteData?.settings?.languages) {
-					remoteData.settings.languages.forEach((l: any) => {
+					remoteData.settings.languages.forEach((l: Language) => {
 						if (l.showInMultiple === undefined) {
 							l.showInMultiple = l.id === 'en' || l.id === 'de';
 						}
@@ -155,7 +155,7 @@ export class GDriveProvider implements StorageAdapter {
 
 		if (!res.ok) throw new Error('Failed to update Google Drive AppData');
 		const data = await res.json();
-		
+
 		if (!fileId && data.id) {
 			authStore.gdrive.fileId = data.id;
 			authStore.save();

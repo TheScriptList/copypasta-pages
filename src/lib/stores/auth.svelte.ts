@@ -13,7 +13,9 @@ class AuthStore {
 	});
 
 	gdrive = $state({
-		clientId: browser ? localStorage.getItem('gd_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID || '' : '',
+		clientId: browser
+			? localStorage.getItem('gd_client_id') || import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+			: '',
 		accessToken: browser ? localStorage.getItem('gd_access_token') || '' : '',
 		fileId: browser ? localStorage.getItem('gd_file_id') || '' : ''
 	});
@@ -21,7 +23,7 @@ class AuthStore {
 	save() {
 		if (browser) {
 			localStorage.setItem('cp_active_provider', this.activeProvider);
-			
+
 			// Github
 			localStorage.setItem('gh_pat', this.github.token);
 			localStorage.setItem('gh_gist_id', this.github.gistId);

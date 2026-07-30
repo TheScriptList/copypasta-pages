@@ -1,4 +1,4 @@
-import type { Database } from '../db.svelte';
+import type { Database, Language } from '../db.svelte';
 import type { StorageAdapter, SyncResult } from './types';
 import { authStore } from '../auth.svelte';
 
@@ -29,7 +29,7 @@ export class GithubProvider implements StorageAdapter {
 
 				// Migration for older data formats
 				if (remoteData?.settings?.languages) {
-					remoteData.settings.languages.forEach((l: any) => {
+					remoteData.settings.languages.forEach((l: Language) => {
 						if (l.showInMultiple === undefined) {
 							l.showInMultiple = l.id === 'en' || l.id === 'de';
 						}
