@@ -387,22 +387,22 @@
 			<div role="tablist" class="tabs tabs-box mb-4">
 				<button 
 					role="tab" 
-					class="tab transition-all duration-300 {activeTab === 'github' ? 'tab-active' : ''}" 
+					class="tab indicator {activeTab === 'github' ? 'tab-active' : ''}" 
 					onclick={() => { activeTab = 'github'; errorMessage = null; }}
 				>
 					GitHub Gist
 					{#if authStore.activeProvider === 'github'}
-						<div class="badge badge-primary badge-sm ml-2" in:scale={{duration: 200, start: 0.8}} out:scale={{duration: 200, start: 0.8}}>Active</div>
+						<span class="indicator-item indicator-top indicator-center badge badge-primary badge-xs" in:scale={{duration: 200, start: 0.8}} out:scale={{duration: 200, start: 0.8}}>Active</span>
 					{/if}
 				</button>
 				<button 
 					role="tab" 
-					class="tab transition-all duration-300 {activeTab === 'gdrive' ? 'tab-active' : ''}" 
+					class="tab indicator {activeTab === 'gdrive' ? 'tab-active' : ''}" 
 					onclick={() => { activeTab = 'gdrive'; errorMessage = null; }}
 				>
 					Google Drive
 					{#if authStore.activeProvider === 'gdrive'}
-						<div class="badge badge-primary badge-sm ml-2" in:scale={{duration: 200, start: 0.8}} out:scale={{duration: 200, start: 0.8}}>Active</div>
+						<span class="indicator-item indicator-top indicator-center badge badge-primary badge-xs" in:scale={{duration: 200, start: 0.8}} out:scale={{duration: 200, start: 0.8}}>Active</span>
 					{/if}
 				</button>
 			</div>
