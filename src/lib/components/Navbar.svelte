@@ -45,22 +45,22 @@
 	<div class="navbar-end">
 		<!-- Sync Status Badge -->
 		<div
-			class="sm:tooltip sm:tooltip-left sm:before:text-xs"
+			class="sm:tooltip sm:tooltip-bottom"
 			data-tip={dbStore.data.updatedAt && dbStore.data.updatedAt !== '1970-01-01T00:00:00.000Z'
 				? `${new Date(dbStore.data.updatedAt).toLocaleString()}`
 				: ''}
 		>
 			<div
-				class="mr-2 badge inline-grid place-items-center transition-colors duration-300 sm:mr-4 {dbStore.syncStatus ===
-				'Synced'
-					? 'badge-outline badge-success'
+				class="mr-2 badge inline-grid place-items-center badge-soft transition-colors duration-300 sm:mr-4
+				{dbStore.syncStatus === 'Synced'
+					? 'badge-success'
 					: dbStore.syncStatus === 'Syncing...'
-						? 'badge-outline badge-info'
+						? 'badge-info'
 						: dbStore.syncStatus === 'Unsaved'
-							? 'badge-outline badge-warning'
+							? 'badge-warning'
 							: dbStore.syncStatus === 'Error'
-								? 'badge-outline badge-error'
-								: 'badge-ghost'}"
+								? 'badge-error'
+								: ''}"
 			>
 				{#key dbStore.syncStatus}
 					<div
@@ -69,15 +69,15 @@
 						out:fade={{ duration: 150 }}
 					>
 						{#if dbStore.syncStatus === 'Synced'}
-							<Cloud class="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+							<Cloud class="h-4 w-4 sm:mr-1" />
 						{:else if dbStore.syncStatus === 'Syncing...'}
-							<CloudCog class="mr-1 h-3 w-3 animate-pulse sm:h-4 sm:w-4" />
+							<CloudCog class="h-4 w-4 animate-pulse sm:mr-1" />
 						{:else if dbStore.syncStatus === 'Unsaved'}
-							<Clock class="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+							<Clock class="h-4 w-4 sm:mr-1" />
 						{:else if dbStore.syncStatus === 'Error'}
-							<AlertCircle class="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+							<AlertCircle class="h-4 w-4 sm:mr-1" />
 						{:else}
-							<CloudOff class="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
+							<CloudOff class="h-4 w-4 sm:mr-1" />
 						{/if}
 						<span class="hidden sm:inline">{dbStore.syncStatus}</span>
 					</div>
