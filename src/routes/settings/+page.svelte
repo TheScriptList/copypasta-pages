@@ -16,7 +16,7 @@
 		Languages,
 		LayoutGrid
 	} from '@lucide/svelte';
-	import { scale, fade } from 'svelte/transition';
+	import { scale } from 'svelte/transition';
 
 	let pat = $state(authStore.github.token);
 	let gistId = $state(authStore.github.gistId);
@@ -493,16 +493,12 @@
 							
 							<div class="flex items-center gap-2">
 								<button 
-									type="button" 
-									class="btn grid place-items-center transition-all duration-300 {authStore.activeProvider === 'github' ? 'btn-disabled' : 'btn-outline btn-accent'}" 
+									type="button"
+									class="btn btn-outline btn-accent"
 									onclick={() => setActiveProvider('github')}
 									disabled={authStore.activeProvider === 'github'}
 								>
-									{#key authStore.activeProvider}
-										<span class="col-start-1 row-start-1" in:scale={{duration:250, delay: 100, start: 0.95}} out:fade={{duration:150}}>
-											{authStore.activeProvider === 'github' ? 'Currently Active' : 'Set as Active Sync Provider'}
-										</span>
-									{/key}
+									{authStore.activeProvider === 'github' ? 'Currently Active' : 'Set as Active Sync Provider'}
 								</button>
 								<button type="submit" class="btn btn-primary">
 									<Save class="h-4 w-4" /> Save
@@ -585,16 +581,12 @@
 							</div>
 							<div class="flex items-center gap-2">
 								<button 
-									type="button" 
-									class="btn grid place-items-center transition-all duration-300 {authStore.activeProvider === 'gdrive' ? 'btn-disabled' : 'btn-outline btn-accent'}" 
+									type="button"
+									class="btn btn-outline btn-accent"
 									onclick={() => setActiveProvider('gdrive')}
 									disabled={authStore.activeProvider === 'gdrive'}
 								>
-									{#key authStore.activeProvider}
-										<span class="col-start-1 row-start-1" in:scale={{duration:250, delay: 100, start: 0.95}} out:fade={{duration:150}}>
-											{authStore.activeProvider === 'gdrive' ? 'Currently Active' : 'Set as Active Sync Provider'}
-										</span>
-									{/key}
+									{authStore.activeProvider === 'gdrive' ? 'Currently Active' : 'Set as Active Sync Provider'}
 								</button>
 								<button type="submit" class="btn btn-primary">
 									<Save class="h-4 w-4" /> Save
